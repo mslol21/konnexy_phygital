@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <defs>
+    <linearGradient id="petGrad" x1="20" y1="20" x2="220" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" rx="48" fill="#09090B" />
+  <rect x="10" y="10" width="220" height="220" rx="40" stroke="url(#petGrad)" stroke-width="4" />
+  <!-- Pata Pet + Coração Central -->
+  <ellipse cx="76" cy="96" rx="14" ry="18" transform="rotate(-20 76 96)" fill="url(#petGrad)" />
+  <ellipse cx="104" cy="76" rx="14" ry="18" transform="rotate(-6 104 76)" fill="url(#petGrad)" />
+  <ellipse cx="136" cy="76" rx="14" ry="18" transform="rotate(6 136 76)" fill="url(#petGrad)" />
+  <ellipse cx="164" cy="96" rx="14" ry="18" transform="rotate(20 164 96)" fill="url(#petGrad)" />
+  <path d="M84 144C84 122 102 110 120 110C138 110 156 122 156 144C156 164 138 172 120 166C102 172 84 164 84 144Z" fill="url(#petGrad)" />
+</svg>

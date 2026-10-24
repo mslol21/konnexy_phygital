@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <defs>
+    <linearGradient id="skyGrad" x1="20" y1="20" x2="220" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" rx="48" fill="#09090B" />
+  <rect x="10" y="10" width="220" height="220" rx="40" stroke="url(#skyGrad)" stroke-width="4" />
+  <!-- Ícone Dental Estilizado + Brilho -->
+  <path d="M88 68C70 68 62 86 66 110C70 134 80 174 96 174C106 174 110 146 120 146C130 146 134 174 144 174C160 174 170 134 174 110C178 86 170 68 152 68C138 68 130 76 120 76C110 76 102 68 88 68Z" stroke="url(#skyGrad)" stroke-width="8" fill="#0EA5E9" fill-opacity="0.15" />
+  <path d="M168 52L172 64L184 68L172 72L168 84L164 72L152 68L164 64L168 52Z" fill="#38BDF8" />
+</svg>

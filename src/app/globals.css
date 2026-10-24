@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: #d97706;
+    --primary-foreground: #ffffff;
+    --primary-muted: rgba(217, 119, 6, 0.14);
+    --surface: #fafafa;
+    --surface-elevated: #ffffff;
+    --surface-glass: rgba(255, 255, 255, 0.65);
+  }
+
+  .dark {
+    --surface: #09090b;
+    --surface-elevated: #121215;
+    --surface-glass: rgba(24, 24, 27, 0.65);
+  }
+
+  body {
+    @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+@layer utilities {
+  .bento-glass {
+    @apply backdrop-blur-md bg-white/65 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60 shadow-glass-sm;
+  }
+
+  .bento-card-hover {
+    @apply transition-all duration-200 hover:border-zinc-300/80 dark:hover:border-zinc-700/80 hover:shadow-glass-md;
+  }
+}

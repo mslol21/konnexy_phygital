@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="240" y2="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#18181B" />
+      <stop offset="100%" stop-color="#09090B" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="30" y1="20" x2="210" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FDE68A" />
+      <stop offset="45%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+  </defs>
+
+  <!-- Fundo Escudo Vintage -->
+  <rect width="240" height="240" rx="48" fill="url(#bgGrad)" />
+  <rect x="10" y="10" width="220" height="220" rx="40" stroke="url(#goldGrad)" stroke-width="3" stroke-opacity="0.75" />
+  <rect x="18" y="18" width="204" height="204" rx="34" stroke="url(#goldGrad)" stroke-width="1" stroke-dasharray="4 4" stroke-opacity="0.45" />
+
+  <!-- Coroa Clássica no Topo -->
+  <path d="M92 56L105 70L120 50L135 70L148 56L142 78H98L92 56Z" fill="url(#goldGrad)" />
+
+  <!-- Tesoura & Navalha Cruzadas (Ícone Central de Barbearia Premium) -->
+  <g stroke="url(#goldGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="72" y1="152" x2="168" y2="88" />
+    <line x1="168" y1="152" x2="72" y2="88" />
+  </g>
+  <circle cx="66" cy="158" r="13" stroke="url(#goldGrad)" stroke-width="5" fill="#09090B" />
+  <circle cx="174" cy="158" r="13" stroke="url(#goldGrad)" stroke-width="5" fill="#09090B" />
+  <circle cx="120" cy="120" r="6" fill="#FDE68A" />
+
+  <!-- Bigode Imperial Estilizado -->
+  <path d="M70 184C84 172 104 174 120 184C136 174 156 172 170 184C158 196 134 196 120 188C106 196 82 196 70 184Z" fill="url(#goldGrad)" />
+
+  <!-- Estrelas Laterais -->
+  <circle cx="48" cy="120" r="3.5" fill="#F59E0B" />
+  <circle cx="192" cy="120" r="3.5" fill="#F59E0B" />
+</svg>

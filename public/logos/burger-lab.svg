@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <defs>
+    <linearGradient id="bgBurger" x1="0" y1="0" x2="240" y2="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#18181B" />
+      <stop offset="100%" stop-color="#09090B" />
+    </linearGradient>
+    <linearGradient id="fireGrad" x1="40" y1="30" x2="200" y2="210" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FBBF24" />
+      <stop offset="50%" stop-color="#EF4444" />
+      <stop offset="100%" stop-color="#991B1B" />
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" rx="48" fill="url(#bgBurger)" />
+  <rect x="10" y="10" width="220" height="220" rx="40" stroke="url(#fireGrad)" stroke-width="4" />
+  <!-- Pão Superior Smash Burger -->
+  <path d="M64 108C64 78 88 62 120 62C152 62 176 78 176 108H64Z" fill="#F59E0B" />
+  <circle cx="100" cy="82" r="3" fill="#FEF3C7" />
+  <circle cx="120" cy="76" r="3" fill="#FEF3C7" />
+  <circle cx="140" cy="84" r="3" fill="#FEF3C7" />
+  <!-- Queijo Cheddar Derretido + Carne Smash -->
+  <path d="M58 120H182L168 134L154 122L120 138L86 122L72 134L58 120Z" fill="#FBBF24" />
+  <rect x="60" y="128" width="120" height="18" rx="9" fill="#EF4444" />
+  <!-- Pão Inferior -->
+  <path d="M66 154H174C174 168 162 176 146 176H94C78 176 66 168 66 154Z" fill="#D97706" />
+</svg>
