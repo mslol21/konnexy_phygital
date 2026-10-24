@@ -2,6 +2,7 @@
   "extends": ["next/core-web-vitals", "plugin:security/recommended-legacy"],
   "plugins": ["security"],
   "rules": {
+    "@next/next/no-img-element": "off",
     "no-eval": "error",
     "no-implied-eval": "error",
     "no-new-func": "error",
