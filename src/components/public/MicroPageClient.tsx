@@ -14,12 +14,23 @@ import {
   Moon,
   Send,
   Nfc,
-  Loader2
+  Loader2,
+  ImagePlus
 } from 'lucide-react';
 import { AiReviewsOutputSchema, buildNicheFallbackReviews } from '@/lib/schemas/reviews';
-import { loadTenantsDb } from '@/lib/store/tenant-store';
+import {
+  loadTenantsDb,
+  updateTenantRecord,
+  cropAndResizeCoverImage,
+  IDEAL_COVER_WIDTH,
+  IDEAL_COVER_HEIGHT
+} from '@/lib/store/tenant-store';
 import { InteractiveStarRating } from '@/components/public/InteractiveStarRating';
 import { BentoModulesGrid } from '@/components/public/BentoModuleCards';
+import { BrandCardBackground, GoogleGLogo } from '@/components/public/BrandCardBackground';
+import { RainbowButton } from '@/components/magicui/rainbow-button';
+import { NeonGradientCard } from '@/components/magicui/neon-gradient-card';
+import { Backlight } from '@/components/magicui/backlight';
 import type {
   Tenant,
   TenantModule,
@@ -56,17 +67,37 @@ export function MicroPageClient({
   useEffect(() => {
     const db = loadTenantsDb();
     const record = db[initialTenant.slug];
-    if (record) {
+    if (record?.tenant) {
       setTenant(record.tenant);
-      setModules(record.modules);
+      if (Array.isArray(record.modules) && record.modules.some((m) => m.is_active)) {
+        setModules(record.modules);
+      }
     }
   }, [initialTenant.slug]);
 
-  const activeModules = [...modules]
+  const activeModules = [...(modules || [])]
     .filter((m) => m.is_active)
     .sort((a, b) => a.order_index - b.order_index);
 
-  const googleReviewModule = activeModules.find((m) => m.module_type === 'google_reviews');
+  const googleReviewModule: TenantModule = activeModules.find(
+    (m) => m.module_type === 'google_reviews'
+  ) || {
+    id: 'default-google-reviews',
+    tenant_id: tenant.id,
+    module_type: 'google_reviews',
+    title: `Avalie ${tenant.name} no Google`,
+    is_active: true,
+    order_index: 1,
+    config_data: {
+      tags: [
+        'Atendimento Impecável',
+        'Ambiente Incrível',
+        'Qualidade Nota 10',
+        'Preço Justo',
+        'Super Rápido'
+      ]
+    }
+  };
   const reviewCfg = (googleReviewModule?.config_data || {}) as GoogleReviewsConfig;
   const availableTags = reviewCfg.tags?.length
     ? reviewCfg.tags
@@ -216,6 +247,25 @@ export function MicroPageClient({
     });
   };
 
+  const handleCoverUploadDirect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const optimizedCoverUrl = await cropAndResizeCoverImage(file);
+      const nextTenant: Tenant = { ...tenant, cover_url: optimizedCoverUrl };
+      setTenant(nextTenant);
+      updateTenantRecord(tenant.slug, {
+        tenant: nextTenant,
+        modules
+      });
+      toast.success('Fundo personalizado aplicado!', {
+        description: `Ajustado automaticamente na dimensão ideal (${IDEAL_COVER_WIDTH}×${IDEAL_COVER_HEIGHT}px • 16:9).`
+      });
+    } catch {
+      toast.error('Não foi possível processar a imagem enviada.');
+    }
+  };
+
   // KILL-SWITCH DO SUPER ADMIN: Bloqueia a placa física se o lojista estiver suspenso ou cancelado
   if (tenant.status === 'suspended' || tenant.status === 'canceled') {
     return (
@@ -256,87 +306,169 @@ export function MicroPageClient({
         />
 
         <main className="relative z-10 w-full max-w-[460px] space-y-4 pb-14">
-          {/* 1. HEADER DO ESTABELECIMENTO */}
-          <header className="relative rounded-3xl backdrop-blur-md bg-white/70 dark:bg-zinc-900/70 border border-zinc-200/60 dark:border-zinc-800/70 p-6 text-center shadow-glass-md">
-            <div className="flex items-center justify-between mb-2">
-              <button
-                type="button"
-                onClick={() => setIsDark(!isDark)}
-                aria-label="Alternar tema claro/escuro"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200/80 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition"
-              >
-                {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-              </button>
-
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/70 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-950/70 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                <Nfc className="h-3 w-3 text-[var(--primary)]" />
-                Placa Inteligente • {accessSource.toUpperCase()}
-              </span>
-
-              <button
-                type="button"
-                onClick={handleSharePage}
-                aria-label="Compartilhar página"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200/80 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition"
-              >
-                <Share2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            {/* Avatar com anel suave de borda e Logo do Estabelecimento */}
-            <div
-              className="relative mx-auto mt-1 flex h-24 w-24 items-center justify-center rounded-3xl p-1 ring-2 ring-[var(--primary)]/50 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900 shadow-brand-glow overflow-hidden"
-              style={{ backgroundColor: tenant.primary_color || '#18181B' }}
-            >
-              {tenant.logo_url ? (
+          {/* 1. HEADER DO ESTABELECIMENTO (NEON GRADIENT CARD + FUNDO PERSONALIZADO 1200x675 16:9) */}
+          <NeonGradientCard
+            borderSize={1.5}
+            borderRadius={24}
+            neonColors={{
+              firstColor: tenant.primary_color || '#f59e0b',
+              secondColor: '#6366f1'
+            }}
+            innerClassName="relative overflow-hidden p-6 text-center bg-white/95 dark:bg-zinc-900/95 min-h-[258px] flex flex-col justify-between"
+          >
+            {/* Camada de Imagem de Fundo Personalizada (Dimensão Ideal 1200x675px • Proporção 16:9) */}
+            {tenant.cover_url && (
+              <>
                 <img
-                  src={tenant.logo_url}
-                  alt={`Logo ${tenant.name}`}
-                  className="h-full w-full rounded-2xl object-cover"
+                  src={tenant.cover_url}
+                  alt={`Capa ${tenant.name}`}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                    zIndex: 0
+                  }}
+                  className="pointer-events-none select-none transition-transform duration-700"
                 />
-              ) : (
-                <span className="text-2xl font-black tracking-tighter text-white">
-                  {tenant.name.slice(0, 2).toUpperCase()}
+                {/* Scrim gradual para leitura perfeita dos textos sobre qualquer foto */}
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: 1,
+                    background: isDark
+                      ? 'linear-gradient(180deg, rgba(9,9,11,0.38) 0%, rgba(9,9,11,0.68) 55%, rgba(9,9,11,0.92) 100%)'
+                      : 'linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.75) 55%, rgba(255,255,255,0.94) 100%)'
+                  }}
+                  className="pointer-events-none"
+                />
+              </>
+            )}
+
+            <div style={{ position: 'relative', zIndex: 2 }}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsDark(!isDark)}
+                    aria-label="Alternar tema claro/escuro"
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200/80 dark:border-zinc-700/80 bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition"
+                  >
+                    {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+                  </button>
+
+                  {/* Botão rápido para personalizar a imagem de fundo na dimensão ideal 1200x675 (16:9) */}
+                  <label
+                    title={`Personalizar imagem de fundo (${IDEAL_COVER_WIDTH}×${IDEAL_COVER_HEIGHT}px • 16:9)`}
+                    className="flex h-8 cursor-pointer items-center gap-1 rounded-full border border-zinc-200/80 dark:border-zinc-700/80 bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md px-2.5 text-[10px] font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition"
+                  >
+                    <ImagePlus className="h-3.5 w-3.5 text-amber-500" />
+                    <span className="hidden sm:inline">Fundo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverUploadDirect}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/70 dark:border-zinc-700/80 bg-zinc-100/85 dark:bg-zinc-950/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">
+                  <Nfc className="h-3 w-3 text-[var(--primary)]" />
+                  Placa Inteligente • {accessSource.toUpperCase()}
                 </span>
+
+                <button
+                  type="button"
+                  onClick={handleSharePage}
+                  aria-label="Compartilhar página"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200/80 dark:border-zinc-700/80 bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              {/* Avatar com anel suave de borda e Backlight cromático do Estabelecimento */}
+              <div className="flex justify-center mt-1">
+                <Backlight
+                  blur={24}
+                  glowColor={tenant.primary_color || '#D97706'}
+                  className="w-auto"
+                >
+                  <div
+                    className="relative mx-auto flex h-24 w-24 items-center justify-center rounded-3xl p-1 ring-2 ring-[var(--primary)]/50 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900 shadow-brand-glow overflow-hidden"
+                    style={{ backgroundColor: tenant.primary_color || '#18181B' }}
+                  >
+                    {tenant.logo_url ? (
+                      <img
+                        src={tenant.logo_url}
+                        alt={`Logo ${tenant.name}`}
+                        className="h-full w-full rounded-2xl object-cover"
+                      />
+                    ) : (
+                      <span className="text-2xl font-black tracking-tighter text-white">
+                        {tenant.name.slice(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </Backlight>
+              </div>
+
+              {/* Badge de categoria */}
+              <div className="mt-3.5">
+                <span
+                  className="inline-flex items-center rounded-full px-3 py-0.5 text-[11px] font-semibold border backdrop-blur-sm"
+                  style={{
+                    borderColor: `${tenant.primary_color}55`,
+                    backgroundColor: `${tenant.primary_color}22`,
+                    color: tenant.primary_color
+                  }}
+                >
+                  {tenant.nicho}
+                </span>
+              </div>
+
+              <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">
+                {tenant.name}
+              </h1>
+
+              {tenant.bio && (
+                <p className="mt-1.5 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-xs mx-auto">
+                  {tenant.bio}
+                </p>
               )}
             </div>
+          </NeonGradientCard>
 
-            {/* Badge de categoria */}
-            <div className="mt-3.5">
-              <span
-                className="inline-flex items-center rounded-full px-3 py-0.5 text-[11px] font-semibold border"
-                style={{
-                  borderColor: `${tenant.primary_color}40`,
-                  backgroundColor: `${tenant.primary_color}15`,
-                  color: tenant.primary_color
-                }}
-              >
-                {tenant.nicho}
-              </span>
-            </div>
-
-            <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
-              {tenant.name}
-            </h1>
-
-            {tenant.bio && (
-              <p className="mt-1.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-xs mx-auto">
-                {tenant.bio}
-              </p>
-            )}
-          </header>
-
-          {/* 2. SELETOR DE AVALIAÇÃO CENTRAL COM IA GEMINI */}
+          {/* 2. SELETOR DE AVALIAÇÃO CENTRAL COM IA GEMINI (SÍMBOLO E CORES DO GOOGLE AO FUNDO) */}
           {googleReviewModule && (
-            <section className="rounded-3xl backdrop-blur-md bg-white/75 dark:bg-zinc-900/75 border border-zinc-200/70 dark:border-zinc-800/80 p-5 shadow-glass-md">
-              <div className="text-center mb-4">
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-300">
-                  <Sparkles className="h-3 w-3" /> Reputação Assistida por IA
-                </span>
-                <h2 className="mt-2 text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                  {googleReviewModule.title || 'Como foi sua experiência hoje?'}
-                </h2>
-              </div>
+            <NeonGradientCard
+              borderSize={1.5}
+              borderRadius={24}
+              neonColors={{
+                firstColor: '#4285F4',
+                secondColor: '#EA4335'
+              }}
+              innerClassName="relative overflow-hidden p-5 bg-white/95 dark:bg-zinc-900/95"
+            >
+              {/* Símbolo Oficial "G" do Google e Iluminação Cromática de 4 Cores ao Fundo */}
+              <BrandCardBackground brand="google" size={165} opacity={0.18} />
+
+              <div style={{ position: 'relative', zIndex: 2 }}>
+                <div className="text-center mb-4">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 dark:bg-white/5 border border-blue-500/25 dark:border-white/15 px-3 py-0.5 text-[11px] font-semibold text-zinc-800 dark:text-zinc-200 backdrop-blur-sm">
+                    <GoogleGLogo className="h-3.5 w-3.5" />
+                    <span>Google Reviews • Assistido por IA</span>
+                    <Sparkles className="h-3 w-3 text-amber-400" />
+                  </span>
+                  <h2 className="mt-2 text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                    {googleReviewModule.title || 'Como foi sua experiência hoje?'}
+                  </h2>
+                </div>
 
               <InteractiveStarRating
                 rating={rating}
@@ -413,11 +545,11 @@ export function MicroPageClient({
                                 </span>
                               </div>
 
-                              <motion.button
+                              <RainbowButton
                                 type="button"
-                                whileTap={{ scale: 0.98 }}
+                                size="sm"
                                 onClick={() => handleCopyAndOpenGoogle(reviewText, idx)}
-                                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 dark:bg-white px-3.5 py-2.5 text-xs font-bold text-white dark:text-zinc-950 shadow-sm transition hover:opacity-95"
+                                className="mt-3 w-full"
                               >
                                 {isCopied ? (
                                   <>
@@ -431,7 +563,7 @@ export function MicroPageClient({
                                     <ExternalLink className="h-3.5 w-3.5 opacity-60" />
                                   </>
                                 )}
-                              </motion.button>
+                              </RainbowButton>
                             </motion.div>
                           );
                         })}
@@ -501,7 +633,8 @@ export function MicroPageClient({
                   </motion.div>
                 )}
               </AnimatePresence>
-            </section>
+              </div>
+            </NeonGradientCard>
           )}
 
           {/* 3. SEÇÃO DE MÓDULOS RÁPIDOS (BENTO MOBILE GRID + DRAWER) */}

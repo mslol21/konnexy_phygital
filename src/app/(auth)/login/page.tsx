@@ -18,6 +18,10 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { LoginCredentialsSchema } from '@/lib/schemas/auth';
+import { WarpBackground } from '@/components/magicui/warp-background';
+import { NeonGradientCard } from '@/components/magicui/neon-gradient-card';
+import { RainbowButton } from '@/components/magicui/rainbow-button';
+import { Backlight } from '@/components/magicui/backlight';
 import type { UserRole } from '@/types/phygital';
 
 export default function UnifiedLoginPage() {
@@ -105,37 +109,54 @@ export default function UnifiedLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
-      {/* Iluminação ambiente sutil */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 top-0 h-96 opacity-20 blur-3xl bg-gradient-to-b from-amber-500/30 via-indigo-500/15 to-transparent"
-      />
-
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 w-full max-w-[420px] rounded-3xl border border-zinc-800/80 bg-zinc-900/75 backdrop-blur-xl p-7 sm:p-8 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.7)]"
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col justify-center items-center px-4 py-8 relative overflow-hidden">
+      <WarpBackground
+        perspective={180}
+        beamsPerSide={3}
+        beamSize={5}
+        gridColor="rgba(245, 158, 11, 0.14)"
+        className="w-full max-w-2xl border-none bg-transparent py-6 flex justify-center"
       >
-        {/* Cabeçalho Minimalista */}
-        <div className="text-center">
-          <Link href="/" className="inline-block">
-            <img
-              src="/logos/konnexy-logo.svg"
-              alt="Konnexy Tag"
-              className="mx-auto h-12 w-12 rounded-2xl shadow-lg"
-            />
-          </Link>
-          <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-950/90 px-3 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-zinc-400">
-            <KeyRound className="h-3 w-3 text-amber-400" /> Supabase SSR • HttpOnly Cookies
-          </span>
-          <h1 className="mt-2.5 text-2xl font-extrabold tracking-tight text-white">
-            Entrar na Konnexy
-          </h1>
-          <p className="mt-1 text-xs text-zinc-400">
-            Autenticação corporativa protegida por política de senha forte
-          </p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative z-10 w-full max-w-[420px] mx-auto"
+        >
+          <NeonGradientCard
+            borderSize={1.5}
+            borderRadius={24}
+            neonColors={
+              selectedRole === 'super_admin'
+                ? { firstColor: '#f59e0b', secondColor: '#ec4899' }
+                : { firstColor: '#6366f1', secondColor: '#06b6d4' }
+            }
+            innerClassName="p-7 sm:p-8 bg-zinc-900/95"
+          >
+            {/* Cabeçalho Minimalista */}
+            <div className="text-center">
+              <Link href="/" className="inline-block">
+                <Backlight
+                  blur={20}
+                  glowColor="rgba(245, 158, 11, 0.5)"
+                  className="w-auto"
+                >
+                  <img
+                    src="/logos/konnexy-logo.svg"
+                    alt="Konnexy Tag"
+                    className="mx-auto h-12 w-12 rounded-2xl shadow-lg"
+                  />
+                </Backlight>
+              </Link>
+              <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-950/90 px-3 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-zinc-400">
+                <KeyRound className="h-3 w-3 text-amber-400" /> Supabase SSR • HttpOnly Cookies
+              </span>
+              <h1 className="mt-2.5 text-2xl font-extrabold tracking-tight text-white">
+                Entrar na Konnexy
+              </h1>
+              <p className="mt-1 text-xs text-zinc-400">
+                Autenticação corporativa protegida por política de senha forte
+              </p>
+            </div>
 
         {/* Seletor Rápido de Contexto RBAC */}
         <div className="mt-6 grid grid-cols-2 gap-2.5">
@@ -267,11 +288,10 @@ export default function UnifiedLoginPage() {
             </div>
           </div>
 
-          <motion.button
+          <RainbowButton
             type="submit"
-            whileTap={{ scale: 0.98 }}
             disabled={isSubmitting}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3 text-xs font-bold text-zinc-950 shadow-lg hover:bg-zinc-100 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full"
           >
             {isSubmitting ? (
               <>
@@ -284,9 +304,11 @@ export default function UnifiedLoginPage() {
                 <ArrowRight className="h-4 w-4" />
               </>
             )}
-          </motion.button>
+          </RainbowButton>
         </form>
-      </motion.div>
+          </NeonGradientCard>
+        </motion.div>
+      </WarpBackground>
     </div>
   );
 }

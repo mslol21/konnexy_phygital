@@ -10,6 +10,9 @@ import {
   DEFAULT_TENANTS_DB,
   loadTenantsDb,
   updateTenantRecord,
+  cropAndResizeCoverImage,
+  IDEAL_COVER_WIDTH,
+  IDEAL_COVER_HEIGHT,
   type TenantFullRecord
 } from '@/lib/store/tenant-store';
 import { PLAN_LIMITS } from '@/lib/auth/rbac';
@@ -29,7 +32,8 @@ import {
   ArrowUpRight,
   Store,
   Plus,
-  Trash2
+  Trash2,
+  ImagePlus
 } from 'lucide-react';
 import type { ModuleType, Tenant, TenantModule } from '@/types/phygital';
 
@@ -182,6 +186,21 @@ function DashboardContent() {
       });
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const optimizedCover = await cropAndResizeCoverImage(file);
+      const updatedTenant = { ...tenantProfile, cover_url: optimizedCover };
+      persistCurrentProfile(updatedTenant, modules);
+      toast.success(`Fundo do 1º quadro de "${tenantProfile.name}" atualizado!`, {
+        description: `Redimensionado automaticamente para a dimensão ideal (${IDEAL_COVER_WIDTH}×${IDEAL_COVER_HEIGHT}px • 16:9).`
+      });
+    } catch {
+      toast.error('Erro ao processar a imagem de fundo.');
+    }
   };
 
   const handleSaveProfile = () => {
@@ -488,6 +507,68 @@ function DashboardContent() {
                         type="file"
                         accept="image/*"
                         onChange={handleLogoUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Upload & Preview da Imagem de Fundo do 1º Quadro (Dimensão Ideal 1200x675px • 16:9) */}
+                <div className="mt-3 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/60 p-3 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                        <ImagePlus className="h-3.5 w-3.5 text-amber-500" />
+                        Fundo do 1º Quadro (Capa)
+                      </p>
+                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                        Dimensão ideal: <strong>{IDEAL_COVER_WIDTH}×{IDEAL_COVER_HEIGHT}px (Proporção 16:9)</strong>
+                      </p>
+                    </div>
+                    {tenantProfile.cover_url && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedTenant = { ...tenantProfile, cover_url: null };
+                          persistCurrentProfile(updatedTenant, modules);
+                          toast.info('Imagem de fundo removida do 1º quadro.');
+                        }}
+                        className="text-[10px] font-semibold text-rose-500 hover:underline"
+                      >
+                        Remover
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Preview proporcional 16:9 */}
+                  <div className="relative h-24 w-full overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-900 flex items-center justify-center">
+                    {tenantProfile.cover_url ? (
+                      <>
+                        <img
+                          src={tenantProfile.cover_url}
+                          alt="Preview Fundo 1º Quadro"
+                          className="h-full w-full object-cover object-center"
+                        />
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/25 via-black/45 to-zinc-950/85" />
+                        <span className="relative z-10 rounded-full bg-black/60 backdrop-blur-sm px-2.5 py-0.5 text-[10px] font-mono font-semibold text-amber-300 border border-amber-500/30">
+                          16:9 • {IDEAL_COVER_WIDTH}×{IDEAL_COVER_HEIGHT}px Ativo
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[11px] text-zinc-500">
+                        Sem imagem de fundo (usando cor sólida)
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <label className="flex-1 inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-100 px-3 py-1.5 text-[11px] font-bold text-white dark:text-zinc-900 hover:opacity-90 transition">
+                      <ImagePlus className="h-3.5 w-3.5" />
+                      <span>Enviar Imagem (Auto-Ajuste 1200×675)</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCoverUpload}
                         className="hidden"
                       />
                     </label>

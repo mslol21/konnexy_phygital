@@ -12,6 +12,7 @@ const PublicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z
     .string()
     .min(1, 'NEXT_PUBLIC_SUPABASE_ANON_KEY inválida ou ausente.'),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
   NEXT_PUBLIC_APP_URL: z
     .string()
     .url()
@@ -23,6 +24,7 @@ const PublicEnvSchema = z.object({
  */
 const ServerEnvSchema = PublicEnvSchema.extend({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  DATABASE_URL: z.string().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z
     .string()
     .min(1, 'SUPABASE_SERVICE_ROLE_KEY é obrigatória para operações privilegiadas.'),
@@ -66,7 +68,11 @@ function parseServerEnv(): ServerEnv {
       process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://sandbox-project.supabase.co',
     NEXT_PUBLIC_SUPABASE_ANON_KEY:
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.sandbox_anon_key_dev',
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || undefined,
+    DATABASE_URL: process.env.DATABASE_URL || undefined,
     NEXT_PUBLIC_APP_URL:
       process.env.NEXT_PUBLIC_APP_URL ||
       (process.env.VERCEL_URL

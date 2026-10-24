@@ -32,6 +32,7 @@ export interface Tenant {
   nicho: string;
   bio?: string | null;
   logo_url: string | null;
+  cover_url?: string | null;
   primary_color: string;
   google_place_id: string | null;
   whatsapp_feedback: string | null;

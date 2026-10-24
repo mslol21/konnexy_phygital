@@ -10,12 +10,26 @@
     --surface: #fafafa;
     --surface-elevated: #ffffff;
     --surface-glass: rgba(255, 255, 255, 0.65);
+
+    /* Magic UI Rainbow & Neon Variables */
+    --color-1: 0 100% 63%;
+    --color-2: 270 100% 63%;
+    --color-3: 210 100% 63%;
+    --color-4: 195 100% 63%;
+    --color-5: 90 100% 63%;
+    --speed: 2s;
   }
 
   .dark {
     --surface: #09090b;
     --surface-elevated: #121215;
     --surface-glass: rgba(24, 24, 27, 0.65);
+
+    --color-1: 0 100% 63%;
+    --color-2: 270 100% 63%;
+    --color-3: 210 100% 63%;
+    --color-4: 195 100% 63%;
+    --color-5: 90 100% 63%;
   }
 
   body {

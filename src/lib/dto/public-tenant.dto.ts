@@ -5,7 +5,7 @@ import type { Tenant, TenantModule, TenantStatus } from '@/types/phygital';
  * Jamais seleciona owner_id, owner_email, owner_phone, mrr_cents, next_billing_date ou notas internas.
  */
 export const PUBLIC_TENANT_SELECT_COLUMNS =
-  'id, slug, name, nicho, bio, logo_url, primary_color, google_place_id, status, created_at' as const;
+  'id, slug, name, nicho, bio, logo_url, cover_url, primary_color, google_place_id, status, created_at' as const;
 
 /**
  * Data Transfer Object (DTO) Estrito para a Micro-Página Pública (/r/[slug]) e API pública.
@@ -18,6 +18,7 @@ export interface PublicTenantDTO {
   nicho: string;
   bio: string | null;
   logo_url: string | null;
+  cover_url: string | null;
   primary_color: string;
   google_place_id: string | null;
   status: TenantStatus;
@@ -54,6 +55,7 @@ export function toPublicTenantDTO(raw: Partial<Tenant> & { slug: string; name: s
     nicho: String(raw.nicho || 'Comércio Local'),
     bio: raw.bio ? String(raw.bio) : null,
     logo_url: raw.logo_url ? String(raw.logo_url) : null,
+    cover_url: raw.cover_url ? String(raw.cover_url) : null,
     primary_color: /^#[0-9A-Fa-f]{6}$/.test(String(raw.primary_color || ''))
       ? String(raw.primary_color)
       : '#0F172A',

@@ -21,11 +21,13 @@ CREATE INDEX IF NOT EXISTS idx_security_audit_logs_created
 ALTER TABLE public.security_audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Apenas Super Admin pode consultar a trilha de auditoria; escrita nunca é liberada para anon
+DROP POLICY IF EXISTS "Only super_admin can read security audit logs" ON public.security_audit_logs;
 CREATE POLICY "Only super_admin can read security audit logs"
     ON public.security_audit_logs FOR SELECT
     TO authenticated
     USING (public.is_super_admin());
 
+DROP POLICY IF EXISTS "Authenticated users can insert audit logs" ON public.security_audit_logs;
 CREATE POLICY "Authenticated users can insert audit logs"
     ON public.security_audit_logs FOR INSERT
     TO authenticated

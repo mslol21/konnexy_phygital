@@ -38,7 +38,7 @@ END $$;
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS public.tenants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    owner_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     slug TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
     nicho TEXT NOT NULL DEFAULT 'Comércio Local',
@@ -127,10 +127,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_tenants_updated_at ON public.tenants;
 CREATE TRIGGER trg_tenants_updated_at
     BEFORE UPDATE ON public.tenants
     FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
+DROP TRIGGER IF EXISTS trg_tenant_modules_updated_at ON public.tenant_modules;
 CREATE TRIGGER trg_tenant_modules_updated_at
     BEFORE UPDATE ON public.tenant_modules
     FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -148,11 +150,13 @@ BEGIN
         (NEW.id, 'catalogo_produtos', 'Destaques & Promoções', false, 5, '{"items": []}'::jsonb),
         (NEW.id, 'wifi_facil', 'Conectar ao Wi-Fi Grátis', false, 6, '{"ssid": "", "password": "", "encryption": "WPA"}'::jsonb),
         (NEW.id, 'social_links', 'Siga nossas Redes Sociais', false, 7, '{"instagram": "", "tiktok": "", "facebook": "", "youtube": ""}'::jsonb),
-        (NEW.id, 'site_institucional', 'Nosso Site Oficial', false, 8, '{"url": "", "label": "Visitar Site Oficial"}'::jsonb);
+        (NEW.id, 'site_institucional', 'Nosso Site Oficial', false, 8, '{"url": "", "label": "Visitar Site Oficial"}'::jsonb)
+    ON CONFLICT (tenant_id, module_type) DO NOTHING;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS trg_seed_tenant_modules ON public.tenants;
 CREATE TRIGGER trg_seed_tenant_modules
     AFTER INSERT ON public.tenants
     FOR EACH ROW EXECUTE FUNCTION public.seed_default_tenant_modules();
@@ -167,11 +171,13 @@ ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para TENANTS
 -- Leitura pública apenas para estabelecimentos ativos (necessário para /r/[slug])
+DROP POLICY IF EXISTS "Public can read active tenants by slug" ON public.tenants;
 CREATE POLICY "Public can read active tenants by slug"
     ON public.tenants FOR SELECT
     USING (is_active = true);
 
 -- Lojista autenticado gerencia apenas seu próprio comércio
+DROP POLICY IF EXISTS "Owners manage their own tenants" ON public.tenants;
 CREATE POLICY "Owners manage their own tenants"
     ON public.tenants FOR ALL
     TO authenticated
@@ -180,6 +186,7 @@ CREATE POLICY "Owners manage their own tenants"
 
 -- Políticas para TENANT_MODULES
 -- Público lê apenas módulos ativos de tenants ativos
+DROP POLICY IF EXISTS "Public can view active modules" ON public.tenant_modules;
 CREATE POLICY "Public can view active modules"
     ON public.tenant_modules FOR SELECT
     USING (
@@ -191,6 +198,7 @@ CREATE POLICY "Public can view active modules"
     );
 
 -- Lojista autenticado vê e edita todos os módulos (ativos ou inativos) do seu tenant
+DROP POLICY IF EXISTS "Owners manage their own tenant modules" ON public.tenant_modules;
 CREATE POLICY "Owners manage their own tenant modules"
     ON public.tenant_modules FOR ALL
     TO authenticated
@@ -209,6 +217,7 @@ CREATE POLICY "Owners manage their own tenant modules"
 
 -- Políticas para REVIEW_LOGS
 -- Clientes anônimos na micro-página podem inserir avaliações/feedbacks
+DROP POLICY IF EXISTS "Public can insert review logs" ON public.review_logs;
 CREATE POLICY "Public can insert review logs"
     ON public.review_logs FOR INSERT
     TO anon, authenticated
@@ -220,6 +229,7 @@ CREATE POLICY "Public can insert review logs"
     );
 
 -- Apenas o dono do estabelecimento pode ler os logs de avaliação
+DROP POLICY IF EXISTS "Owners can read their review logs" ON public.review_logs;
 CREATE POLICY "Owners can read their review logs"
     ON public.review_logs FOR SELECT
     TO authenticated
@@ -232,6 +242,7 @@ CREATE POLICY "Owners can read their review logs"
 
 -- Políticas para ANALYTICS_EVENTS
 -- Qualquer visitante da placa física pode registrar eventos de toque/leitura
+DROP POLICY IF EXISTS "Public can insert analytics events" ON public.analytics_events;
 CREATE POLICY "Public can insert analytics events"
     ON public.analytics_events FOR INSERT
     TO anon, authenticated
@@ -243,6 +254,7 @@ CREATE POLICY "Public can insert analytics events"
     );
 
 -- Apenas o dono visualiza o dashboard de analytics
+DROP POLICY IF EXISTS "Owners can read their analytics events" ON public.analytics_events;
 CREATE POLICY "Owners can read their analytics events"
     ON public.analytics_events FOR SELECT
     TO authenticated

@@ -24,7 +24,12 @@ const config: Config = {
           DEFAULT: 'var(--surface)',
           elevated: 'var(--surface-elevated)',
           glass: 'var(--surface-glass)'
-        }
+        },
+        'color-1': 'hsl(var(--color-1))',
+        'color-2': 'hsl(var(--color-2))',
+        'color-3': 'hsl(var(--color-3))',
+        'color-4': 'hsl(var(--color-4))',
+        'color-5': 'hsl(var(--color-5))'
       },
       boxShadow: {
         'glass-sm': '0 2px 10px -2px rgba(0, 0, 0, 0.05), 0 1px 0 0 rgba(255, 255, 255, 0.08) inset',
@@ -39,11 +44,28 @@ const config: Config = {
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' }
+        },
+        rainbow: {
+          '0%': { 'background-position': '0%' },
+          '100%': { 'background-position': '200%' }
+        },
+        'background-position-spin': {
+          '0%': { backgroundPosition: 'top center' },
+          '100%': { backgroundPosition: 'bottom center' }
+        },
+        'warp-beam': {
+          '0%': { transform: 'translateY(100%)', opacity: '0' },
+          '15%': { opacity: '1' },
+          '85%': { opacity: '1' },
+          '100%': { transform: 'translateY(-120%)', opacity: '0' }
         }
       },
       animation: {
         'pulse-subtle': 'pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        shimmer: 'shimmer 2.5s linear infinite'
+        shimmer: 'shimmer 2.5s linear infinite',
+        rainbow: 'rainbow var(--speed, 2s) infinite linear',
+        'background-position-spin': 'background-position-spin 3000ms infinite alternate',
+        'warp-beam': 'warp-beam var(--beam-duration, 4s) linear infinite'
       }
     }
   },

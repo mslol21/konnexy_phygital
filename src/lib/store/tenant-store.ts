@@ -1,7 +1,7 @@
 import type { Tenant, TenantModule, ModuleType, PlanTier } from '@/types/phygital';
 import { PLAN_LIMITS } from '@/lib/auth/rbac';
 
-const STORAGE_KEY = 'konnexy_tenants_db_v2';
+const STORAGE_KEY = 'konnexy_tenants_db_v3';
 
 export interface TenantFullRecord {
   tenant: Tenant;
@@ -17,6 +17,7 @@ export const DEFAULT_TENANTS_DB: Record<string, TenantFullRecord> = {
       nicho: 'Barbearia & Estética Masculina',
       bio: 'Cortes clássicos, barba na toalha quente e cerveja artesanal gelada.',
       logo_url: '/logos/barbearia-dom-corleone.svg',
+      cover_url: '/covers/barbearia-cover.svg',
       primary_color: '#D97706',
       google_place_id: 'ChIJN1t_tDeuEmsRUsoyG83frY4',
       whatsapp_feedback: '5511999999999',
@@ -133,6 +134,7 @@ export const DEFAULT_TENANTS_DB: Record<string, TenantFullRecord> = {
       nicho: 'Hamburgueria Artesanal',
       bio: 'Smash burgers na chapa de ferro, blend Angus certificado e batata rústica com alecrim.',
       logo_url: '/logos/burger-lab.svg',
+      cover_url: '/covers/burger-cover.svg',
       primary_color: '#EF4444',
       google_place_id: 'ChIJN1t_tDeuEmsRUsoyBurger',
       whatsapp_feedback: '5511988887777',
@@ -250,6 +252,7 @@ export const DEFAULT_TENANTS_DB: Record<string, TenantFullRecord> = {
       nicho: 'Clínica Odontológica & Estética',
       bio: 'Lentes de contato dental em porcelana, alinhadores invisíveis e implantes digitais sem dor.',
       logo_url: '/logos/odonto-prime.svg',
+      cover_url: '/covers/odonto-cover.svg',
       primary_color: '#0EA5E9',
       google_place_id: 'ChIJN1t_tDeuEmsRUsoyOdonto',
       whatsapp_feedback: '5511977776666',
@@ -329,6 +332,7 @@ export const DEFAULT_TENANTS_DB: Record<string, TenantFullRecord> = {
       nicho: 'Pet Shop & Clínica Veterinária',
       bio: 'Banho e tosa humanizado com monitoramento por câmeras, farmácia pet e consultas 24h.',
       logo_url: '/logos/pet-amigo-fiel.svg',
+      cover_url: '/covers/pet-cover.svg',
       primary_color: '#10B981',
       google_place_id: 'ChIJN1t_tDeuEmsRUsoyPet',
       whatsapp_feedback: '5511966665555',
@@ -480,11 +484,99 @@ export function loadTenantsDb(): Record<string, TenantFullRecord> {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_TENANTS_DB));
       return DEFAULT_TENANTS_DB;
     }
-    const parsed = JSON.parse(raw);
-    return { ...DEFAULT_TENANTS_DB, ...parsed };
+    const parsed = JSON.parse(raw) as Record<string, TenantFullRecord>;
+    const merged: Record<string, TenantFullRecord> = { ...DEFAULT_TENANTS_DB, ...parsed };
+
+    // Garante integridade dos módulos e da capa (cover_url) para cada perfil salvo no navegador
+    for (const [slug, record] of Object.entries(merged)) {
+      if (!record || !record.tenant) {
+        if (DEFAULT_TENANTS_DB[slug]) {
+          merged[slug] = DEFAULT_TENANTS_DB[slug];
+        }
+        continue;
+      }
+      if (record.tenant.cover_url === undefined && DEFAULT_TENANTS_DB[slug]?.tenant.cover_url) {
+        record.tenant.cover_url = DEFAULT_TENANTS_DB[slug].tenant.cover_url;
+      }
+      if (!Array.isArray(record.modules) || record.modules.length === 0) {
+        merged[slug] = {
+          tenant: record.tenant,
+          modules:
+            DEFAULT_TENANTS_DB[slug]?.modules || createDefaultModulesForTenant(record.tenant)
+        };
+      }
+    }
+
+    return merged;
   } catch {
     return DEFAULT_TENANTS_DB;
   }
+}
+
+export const IDEAL_COVER_WIDTH = 1200;
+export const IDEAL_COVER_HEIGHT = 675; // Proporção 16:9 ideal para o 1º quadro (460x258px @ ~2.6x Retina)
+
+/**
+ * Redimensiona e faz recorte central inteligente (Smart Center-Crop 16:9 - 1200x675px)
+ * via HTML5 Canvas para que qualquer foto enviada encaixe perfeitamente no 1º quadro.
+ */
+export function cropAndResizeCoverImage(
+  file: File,
+  targetWidth = IDEAL_COVER_WIDTH,
+  targetHeight = IDEAL_COVER_HEIGHT
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Falha ao ler arquivo de imagem.'));
+    reader.onload = () => {
+      const rawDataUrl = String(reader.result);
+      // Se for SVG vetorial, preserva o SVG diretamente
+      if (file.type === 'image/svg+xml') {
+        resolve(rawDataUrl);
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(rawDataUrl);
+          return;
+        }
+
+        // Cálculo de Smart Center-Crop (object-cover 16:9)
+        const targetRatio = targetWidth / targetHeight;
+        const srcRatio = img.width / img.height;
+
+        let sx = 0;
+        let sy = 0;
+        let sWidth = img.width;
+        let sHeight = img.height;
+
+        if (srcRatio > targetRatio) {
+          // Imagem mais larga que 16:9 -> corta laterais mantendo o centro
+          sWidth = img.height * targetRatio;
+          sx = (img.width - sWidth) / 2;
+        } else {
+          // Imagem mais alta que 16:9 -> corta topo/base mantendo o centro
+          sHeight = img.width / targetRatio;
+          sy = (img.height - sHeight) / 2;
+        }
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
+
+        resolve(canvas.toDataURL('image/jpeg', 0.88));
+      };
+      img.onerror = () => resolve(rawDataUrl);
+      img.src = rawDataUrl;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 export function saveTenantsDb(db: Record<string, TenantFullRecord>) {

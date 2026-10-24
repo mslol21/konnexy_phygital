@@ -17,8 +17,11 @@ import {
 } from 'lucide-react';
 import {
   generateQrCodeSvg,
+  generateAcrylicPlateSvg,
   generateQrCodeHighResPngDataUrl
 } from '@/lib/qrcode/generator';
+import { Backlight } from '@/components/magicui/backlight';
+import { RainbowButton } from '@/components/magicui/rainbow-button';
 
 interface PhygitalExporterProps {
   slug: string;
@@ -110,23 +113,27 @@ export function PhygitalExporter({
   const handleDownloadSvg = async () => {
     setIsExporting(true);
     try {
-      const svgString = await generateQrCodeSvg({
+      const svgString = await generateAcrylicPlateSvg({
         url: qrUrl,
+        tenantName,
+        slug,
         darkColor: primaryColor,
         lightColor: '#FFFFFF',
-        quietZoneModules
+        quietZoneModules,
+        includeAcrylicFrame,
+        centerLogoUrl: logoUrl
       });
 
       const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `konnexy-qr-${slug}-levelH-laser.svg`;
+      a.download = `konnexy-placa-${slug}${includeAcrylicFrame ? '-acrilico' : '-qr'}-levelH.svg`;
       a.click();
       URL.revokeObjectURL(url);
 
-      toast.success('Vetor SVG (Nível H) exportado!', {
-        description: 'Arquivo pronto para CorelDRAW, Illustrator, Corte Laser e Impressão UV.'
+      toast.success('Vetor SVG da Placa Acrílica (Nível H) exportado!', {
+        description: 'Visual idêntico ao preview da esquerda, pronto para Corte Laser e Impressão UV.'
       });
     } finally {
       setIsExporting(false);
@@ -190,13 +197,11 @@ export function PhygitalExporter({
          * COLUNA ESQUERDA: MOCKUP REALISTA DA PLACA EM ACRÍLICO (5 COLUNAS)
          * =================================================================== */}
         <div className="lg:col-span-5 flex flex-col items-center">
-          <div className="relative group">
-            {/* Sombra ambiente da cor primária do lojista */}
-            <div
-              className="absolute -inset-3 rounded-[36px] opacity-25 blur-2xl transition duration-500 group-hover:opacity-40"
-              style={{ backgroundColor: primaryColor }}
-            />
-
+          <Backlight
+            blur={28}
+            glowColor={primaryColor}
+            className="w-auto"
+          >
             {/* Placa física de Acrílico Cristal */}
             <motion.div
               whileHover={{ y: -4 }}
@@ -276,7 +281,7 @@ export function PhygitalExporter({
                 style={{ backgroundColor: primaryColor }}
               />
             </motion.div>
-          </div>
+          </Backlight>
           <span className="mt-3 text-[11px] font-medium text-zinc-400">
             Preview em tempo real da peça acrílica (10x15cm)
           </span>
@@ -364,16 +369,15 @@ export function PhygitalExporter({
 
           {/* Bloco 3: Controles de Download (Primário SVG Vetorial + Secundário PNG 300 DPI) */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
-            <motion.button
+            <RainbowButton
               type="button"
-              whileTap={{ scale: 0.98 }}
               disabled={isExporting}
               onClick={handleDownloadSvg}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 dark:bg-white px-5 py-3.5 text-xs sm:text-sm font-bold text-white dark:text-zinc-950 shadow-sm hover:opacity-95 transition disabled:opacity-50"
+              className="flex-1 text-xs sm:text-sm"
             >
               <FileCode2 className="h-4 w-4" />
               Baixar SVG Vetorial Puro (Corte Laser / UV)
-            </motion.button>
+            </RainbowButton>
 
             <motion.button
               type="button"

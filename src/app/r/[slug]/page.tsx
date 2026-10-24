@@ -65,7 +65,9 @@ export default async function PublicMicroPage({ params, searchParams }: PageProp
           .eq('is_active', true)
           .order('order_index', { ascending: true });
 
-        maskedModules = toPublicModulesDTO((dbModules as TenantModule[]) || []);
+        if (dbModules && dbModules.length > 0) {
+          maskedModules = toPublicModulesDTO(dbModules as TenantModule[]);
+        }
 
         supabase
           .from('analytics_events')

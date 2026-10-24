@@ -105,11 +105,13 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tenant_invoices ENABLE ROW LEVEL SECURITY;
 
 -- PROFILES: Usuário vê seu próprio perfil; Super Admin vê e gerencia todos
+DROP POLICY IF EXISTS "Users can read own profile or super_admin reads all" ON public.profiles;
 CREATE POLICY "Users can read own profile or super_admin reads all"
     ON public.profiles FOR SELECT
     TO authenticated
     USING (auth.uid() = id OR public.is_super_admin());
 
+DROP POLICY IF EXISTS "Super admin manages all profiles" ON public.profiles;
 CREATE POLICY "Super admin manages all profiles"
     ON public.profiles FOR ALL
     TO authenticated
@@ -118,18 +120,21 @@ CREATE POLICY "Super admin manages all profiles"
 
 -- TENANTS: Atualização das políticas para respeitar `status` na leitura pública e `is_super_admin()`
 DROP POLICY IF EXISTS "Public can read active tenants by slug" ON public.tenants;
+DROP POLICY IF EXISTS "Public can read active or trial tenants by slug" ON public.tenants;
 CREATE POLICY "Public can read active or trial tenants by slug"
     ON public.tenants FOR SELECT
     TO anon, authenticated
     USING (status IN ('active', 'trial') OR public.is_super_admin() OR auth.uid() = owner_id);
 
 DROP POLICY IF EXISTS "Owners manage their own tenants" ON public.tenants;
+DROP POLICY IF EXISTS "Super admin full access on tenants" ON public.tenants;
 CREATE POLICY "Super admin full access on tenants"
     ON public.tenants FOR ALL
     TO authenticated
     USING (public.is_super_admin())
     WITH CHECK (public.is_super_admin());
 
+DROP POLICY IF EXISTS "Tenant admins can update their own tenant profile" ON public.tenants;
 CREATE POLICY "Tenant admins can update their own tenant profile"
     ON public.tenants FOR UPDATE
     TO authenticated
@@ -138,6 +143,7 @@ CREATE POLICY "Tenant admins can update their own tenant profile"
 
 -- TENANT_MODULES: Super Admin pode ativar/desativar módulos de qualquer cliente conforme o plano
 DROP POLICY IF EXISTS "Owners manage their own tenant modules" ON public.tenant_modules;
+DROP POLICY IF EXISTS "Owners and super_admin manage tenant modules" ON public.tenant_modules;
 CREATE POLICY "Owners and super_admin manage tenant modules"
     ON public.tenant_modules FOR ALL
     TO authenticated
@@ -157,12 +163,14 @@ CREATE POLICY "Owners and super_admin manage tenant modules"
     );
 
 -- TENANT_INVOICES: Super Admin gerencia cobranças; Lojista apenas visualiza suas faturas
+DROP POLICY IF EXISTS "Super admin manages all invoices" ON public.tenant_invoices;
 CREATE POLICY "Super admin manages all invoices"
     ON public.tenant_invoices FOR ALL
     TO authenticated
     USING (public.is_super_admin())
     WITH CHECK (public.is_super_admin());
 
+DROP POLICY IF EXISTS "Tenant admin views own invoices" ON public.tenant_invoices;
 CREATE POLICY "Tenant admin views own invoices"
     ON public.tenant_invoices FOR SELECT
     TO authenticated

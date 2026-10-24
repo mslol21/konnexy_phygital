@@ -9,7 +9,8 @@
     "lint": "next lint",
     "security:audit": "npm audit --audit-level=moderate",
     "code:scan": "tsc --noEmit && node scripts/security-code-scan.mjs",
-    "rls:verify": "node scripts/verify-rls.mjs"
+    "rls:verify": "node scripts/verify-rls.mjs",
+    "db:migrate": "node scripts/db-migrate.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.0.0",
