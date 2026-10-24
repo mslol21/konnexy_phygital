@@ -1,7 +1,7 @@
 import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import { env } from '@/lib/env';
+import { LoginCredentialsSchema } from '@/lib/schemas/auth';
 import {
   extractClientIp,
   checkRateLimit,
@@ -13,11 +13,7 @@ import {
   computeRoleSignature
 } from '@/lib/security/audit-logger';
 
-const LoginRequestSchema = z.object({
-  email: z.string().email('E-mail inválido.').max(120),
-  password: z.string().min(4, 'Senha inválida.').max(128),
-  role: z.enum(['super_admin', 'tenant_admin'])
-});
+const GENERIC_AUTH_ERROR = 'E-mail ou senha incorretos.';
 
 export async function POST(req: NextRequest) {
   const clientIp = extractClientIp(req);
@@ -38,16 +34,17 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const parsed = LoginRequestSchema.safeParse(body);
+    const parsed = LoginCredentialsSchema.safeParse(body);
 
     if (!parsed.success) {
+      // Prevenção de User Enumeration: retorna mensagem padronizada e genérica
       return NextResponse.json(
-        { error: 'Credenciais em formato inválido.' },
-        { status: 400 }
+        { error: GENERIC_AUTH_ERROR },
+        { status: 401 }
       );
     }
 
-    const { email, role } = parsed.data;
+    const { email, role = 'tenant_admin' } = parsed.data;
 
     // 2. Gera assinatura de integridade para o papel RBAC (impede adulteração de cookie)
     const signature = computeRoleSignature(role, env.SESSION_HMAC_SECRET);
@@ -71,10 +68,12 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     );
 
-    // Define cookies protegidos (SameSite=Lax)
+    // Define cookies HttpOnly protegidos (Zero localStorage para tokens de sessão)
     response.cookies.set('konnexy_role', role, {
       path: '/',
       maxAge: 86400,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax'
     });
 
@@ -82,14 +81,15 @@ export async function POST(req: NextRequest) {
       path: '/',
       maxAge: 86400,
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax'
     });
 
     return response;
   } catch {
     return NextResponse.json(
-      { error: 'Falha ao processar requisição de autenticação.' },
-      { status: 500 }
+      { error: GENERIC_AUTH_ERROR },
+      { status: 401 }
     );
   }
 }

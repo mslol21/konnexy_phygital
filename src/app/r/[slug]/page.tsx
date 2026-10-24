@@ -1,7 +1,13 @@
 import React from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/utils/supabase/server';
+import { env } from '@/lib/env';
 import { MicroPageClient } from '@/components/public/MicroPageClient';
 import { DEFAULT_TENANTS_DB, createDefaultModulesForTenant } from '@/lib/store/tenant-store';
+import {
+  PUBLIC_TENANT_SELECT_COLUMNS,
+  toPublicTenantDTO,
+  toPublicModulesDTO
+} from '@/lib/dto/public-tenant.dto';
 import type { AccessSource, Tenant, TenantModule } from '@/types/phygital';
 
 interface PageProps {
@@ -16,10 +22,6 @@ export default async function PublicMicroPage({ params, searchParams }: PageProp
   const accessSource: AccessSource =
     src === 'nfc' ? 'nfc' : src === 'qr' ? 'qr' : 'direct';
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  // Seleciona o perfil específico do slug (ex: barbearia-premium, burger-lab-artesanal, clinica-sorriso-prime, petshop-amigo-fiel)
   const fallbackRecord = DEFAULT_TENANTS_DB[slug] || {
     tenant: {
       ...DEFAULT_TENANTS_DB['barbearia-premium'].tenant,
@@ -35,45 +37,54 @@ export default async function PublicMicroPage({ params, searchParams }: PageProp
     })
   };
 
-  let tenant: Tenant = fallbackRecord.tenant;
-  let modules: TenantModule[] = fallbackRecord.modules;
+  // Aplica Data Masking estrito via DTO antes de serializar para o Client Component
+  let maskedTenant: Tenant = toPublicTenantDTO(fallbackRecord.tenant);
+  let maskedModules: TenantModule[] = toPublicModulesDTO(fallbackRecord.modules);
 
-  if (supabaseUrl && supabaseAnonKey) {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const isLiveSupabase =
+    !env.NEXT_PUBLIC_SUPABASE_URL.includes('sandbox-project.supabase.co');
 
-    const { data: dbTenant } = await supabase
-      .from('tenants')
-      .select('*')
-      .eq('slug', slug)
-      .single();
+  if (isLiveSupabase) {
+    try {
+      const supabase = await createClient();
 
-    if (dbTenant) {
-      tenant = dbTenant as Tenant;
+      // Seleciona estritamente as colunas públicas permitidas (nunca owner_email, owner_id ou mrr_cents)
+      const { data: dbTenant } = await supabase
+        .from('tenants')
+        .select(PUBLIC_TENANT_SELECT_COLUMNS)
+        .eq('slug', slug)
+        .single();
 
-      const { data: dbModules } = await supabase
-        .from('tenant_modules')
-        .select('*')
-        .eq('tenant_id', dbTenant.id)
-        .eq('is_active', true)
-        .order('order_index', { ascending: true });
+      if (dbTenant) {
+        maskedTenant = toPublicTenantDTO(dbTenant);
 
-      modules = (dbModules as TenantModule[]) || [];
+        const { data: dbModules } = await supabase
+          .from('tenant_modules')
+          .select('id, tenant_id, module_type, title, is_active, config_data, order_index')
+          .eq('tenant_id', dbTenant.id)
+          .eq('is_active', true)
+          .order('order_index', { ascending: true });
 
-      supabase
-        .from('analytics_events')
-        .insert({
-          tenant_id: dbTenant.id,
-          event_type: 'page_view',
-          source: accessSource
-        })
-        .then(() => {});
+        maskedModules = toPublicModulesDTO((dbModules as TenantModule[]) || []);
+
+        supabase
+          .from('analytics_events')
+          .insert({
+            tenant_id: dbTenant.id,
+            event_type: 'page_view',
+            source: accessSource
+          })
+          .then(() => {});
+      }
+    } catch {
+      // Mantém DTO mascarado de fallback sem vazar erros de banco
     }
   }
 
   return (
     <MicroPageClient
-      tenant={tenant}
-      modules={modules}
+      tenant={maskedTenant}
+      modules={maskedModules}
       accessSource={accessSource}
     />
   );

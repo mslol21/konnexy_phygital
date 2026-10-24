@@ -4,10 +4,11 @@ import {
   logSecurityAudit,
   computeRoleSignature
 } from '@/lib/security/audit-logger';
+import { updateSupabaseSession } from '@/utils/supabase/middleware';
 
 const VALID_ROLES = new Set(['super_admin', 'tenant_admin']);
 const HMAC_SECRET =
-  process.env.SESSION_HMAC_SECRET || 'konnexy_dev_hmac_secret_2026_safe';
+  process.env.SESSION_HMAC_SECRET || 'konnexy_default_hmac_secret_2026_safe';
 
 const CSP_HEADER = [
   "default-src 'self'",
@@ -33,28 +34,32 @@ function applySecurityHeaders(res: NextResponse): NextResponse {
   return res;
 }
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
   const clientIp = extractClientIp(req);
 
-  // 1. Rotas Públicas e Assets recebem os Security Headers sem bloqueio de sessão
+  // 1. Renova e valida o token JWT no Supabase SSR (se chaves ativas)
+  const { response: supabaseResponse } = await updateSupabaseSession(req);
+
+  // 2. Rotas Públicas e de Autenticação recebem os Security Headers sem bloqueio
   if (
     pathname.startsWith('/r/') ||
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/logos') ||
     pathname === '/' ||
-    pathname === '/login'
+    pathname === '/login' ||
+    pathname === '/forgot-password' ||
+    pathname === '/reset-password'
   ) {
-    return applySecurityHeaders(NextResponse.next());
+    return applySecurityHeaders(supabaseResponse);
   }
 
-  // 2. Validação de Integridade de Claims RBAC (Anti-Tampering)
+  // 3. Validação de Integridade de Claims RBAC (Anti-Tampering)
   const roleCookie = req.cookies.get('konnexy_role')?.value;
   const sigCookie = req.cookies.get('konnexy_sig')?.value;
 
   if (roleCookie) {
-    // Bloqueia imediatamente se o papel for inválido ou se a assinatura criptográfica tiver sido adulterada
     const expectedSig = computeRoleSignature(roleCookie, HMAC_SECRET);
     const isRoleMalformed = !VALID_ROLES.has(roleCookie);
     const isSigTampered = Boolean(sigCookie && sigCookie !== expectedSig);
@@ -81,8 +86,8 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // 3. Controle de Acesso Estrito ao /super-admin
-  if (pathname.startsWith('/super-admin')) {
+  // 4. Controle de Acesso Estrito ao /super-admin e /admin
+  if (pathname.startsWith('/super-admin') || pathname.startsWith('/admin')) {
     if (roleCookie === 'tenant_admin') {
       logSecurityAudit({
         action: 'SESSION_TAMPERING_BLOCKED',
@@ -99,7 +104,6 @@ export function middleware(req: NextRequest) {
       return applySecurityHeaders(NextResponse.redirect(url));
     }
 
-    // Registra log de auditoria de acesso ao painel Super Admin
     logSecurityAudit({
       action: 'SUPER_ADMIN_DASHBOARD_ACCESS',
       actorRole: roleCookie || 'super_admin_dev',
@@ -109,7 +113,7 @@ export function middleware(req: NextRequest) {
     });
   }
 
-  // 4. Auditoria de Impersonation quando Super Admin gerencia perfil específico (?tenant=slug)
+  // 5. Auditoria de Impersonation quando Super Admin gerencia perfil específico (?tenant=slug)
   const impersonatedTenant = searchParams.get('tenant');
   if (pathname.startsWith('/dashboard') && impersonatedTenant) {
     logSecurityAudit({
@@ -122,7 +126,7 @@ export function middleware(req: NextRequest) {
     });
   }
 
-  return applySecurityHeaders(NextResponse.next());
+  return applySecurityHeaders(supabaseResponse);
 }
 
 export const config = {
