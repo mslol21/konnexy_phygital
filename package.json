@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "security:audit": "npm audit --audit-level=moderate",
-    "code:scan": "tsc --noEmit && next lint",
+    "code:scan": "tsc --noEmit && node scripts/security-code-scan.mjs",
     "rls:verify": "node scripts/verify-rls.mjs"
   },
   "dependencies": {
