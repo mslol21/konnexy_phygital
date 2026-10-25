@@ -72,7 +72,8 @@ export function BentoModulesGrid({ tenant, modules }: BentoModulesGridProps) {
       const { ssid, password, encryption = 'WPA' } = activeDrawer.cfg;
       payload = `WIFI:S:${ssid};T:${encryption};P:${password || ''};;`;
     } else if (activeDrawer.type === 'pix') {
-      payload = activeDrawer.cfg.pix_key;
+      // A Pix key is not an EMV payment payload: offer key copy only.
+      payload = '';
     }
 
     if (payload) {
@@ -88,7 +89,7 @@ export function BentoModulesGrid({ tenant, modules }: BentoModulesGridProps) {
   }, [activeDrawer]);
 
   const handleCopyText = async (text: string, id: string, toastMessage: string, description?: string) => {
-    await navigator.clipboard.writeText(text);
+    try { await navigator.clipboard.writeText(text); } catch { toast.error('Não foi possível copiar. Selecione o texto e copie manualmente.'); return; }
     setCopiedId(id);
     toast.success(toastMessage, { description });
     setTimeout(() => setCopiedId(null), 2200);
@@ -109,6 +110,7 @@ export function BentoModulesGrid({ tenant, modules }: BentoModulesGridProps) {
             case 'whatsapp_direct': {
               const cfg = (mod.config_data || {}) as WhatsAppDirectConfig;
               const cleanPhone = (cfg.phone || '').replace(/\D/g, '');
+              if (!cleanPhone) return null;
               const msg =
                 cfg.default_message ||
                 `Olá! Estou na ${tenant.name} e acessei a placa inteligente.`;
@@ -146,7 +148,7 @@ export function BentoModulesGrid({ tenant, modules }: BentoModulesGridProps) {
                           {mod.title || cfg.button_label || 'Atendimento via WhatsApp'}
                         </h3>
                         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                          Resposta rápida sem fila de espera
+                          Abra a conversa e envie sua mensagem
                         </p>
                       </div>
                     </div>

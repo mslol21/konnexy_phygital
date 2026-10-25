@@ -61,8 +61,7 @@ export const StrongPasswordSchema = z
  */
 export const LoginCredentialsSchema = z.object({
   email: EmailSchema,
-  password: StrongPasswordSchema,
-  role: z.enum(['super_admin', 'tenant_admin']).optional()
+  password: z.string().min(1, 'Informe sua senha.').max(128)
 });
 
 export type LoginCredentialsInput = z.infer<typeof LoginCredentialsSchema>;

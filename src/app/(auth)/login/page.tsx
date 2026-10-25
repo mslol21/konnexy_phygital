@@ -22,14 +22,12 @@ import { WarpBackground } from '@/components/magicui/warp-background';
 import { NeonGradientCard } from '@/components/magicui/neon-gradient-card';
 import { RainbowButton } from '@/components/magicui/rainbow-button';
 import { Backlight } from '@/components/magicui/backlight';
-import type { UserRole } from '@/types/phygital';
 
 export default function UnifiedLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('ceo@konnexy.app');
-  const [password, setPassword] = useState('Konnexy@2026!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>('super_admin');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -43,8 +41,7 @@ export default function UnifiedLoginPage() {
     // Validação defensiva via Zod (RFC Email + Política de Senha Forte)
     const parsed = LoginCredentialsSchema.safeParse({
       email,
-      password,
-      role: selectedRole
+      password
     });
 
     if (!parsed.success) {
@@ -67,8 +64,7 @@ export default function UnifiedLoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: parsed.data.email,
-          password: parsed.data.password,
-          role: selectedRole
+          password: parsed.data.password
         })
       });
 
@@ -76,7 +72,7 @@ export default function UnifiedLoginPage() {
 
       if (res.status === 429) {
         setErrorMessage(data.error);
-        toast.error('Proteção Anti-Força Bruta (HTTP 429)', {
+        toast.error('Aguarde antes de tentar novamente', {
           description: data.error
         });
         return;
@@ -84,25 +80,17 @@ export default function UnifiedLoginPage() {
 
       if (!res.ok) {
         // Mensagem padronizada e genérica (Prevenção de User Enumeration)
-        const genericMsg = 'E-mail ou senha incorretos.';
+        const genericMsg = res.status >= 500 ? 'Serviço indisponível. Tente novamente em instantes.' : data.error || 'E-mail ou senha incorretos.';
         setErrorMessage(genericMsg);
         toast.error(genericMsg);
         return;
       }
 
-      if (selectedRole === 'super_admin') {
-        toast.success('Sessão SSR HttpOnly iniciada (Super Admin)', {
-          description: 'Redirecionando para o painel central...'
-        });
-        router.push('/super-admin');
-      } else {
-        toast.success('Sessão SSR HttpOnly iniciada (Lojista)', {
-          description: 'Redirecionando para o painel do estabelecimento...'
-        });
-        router.push('/dashboard');
-      }
+      toast.success('Acesso confirmado.');
+      router.push(data.redirectTo);
+      router.refresh();
     } catch {
-      setErrorMessage('E-mail ou senha incorretos.');
+      setErrorMessage('Não foi possível conectar. Verifique sua conexão e tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -125,11 +113,7 @@ export default function UnifiedLoginPage() {
           <NeonGradientCard
             borderSize={1.5}
             borderRadius={24}
-            neonColors={
-              selectedRole === 'super_admin'
-                ? { firstColor: '#f59e0b', secondColor: '#ec4899' }
-                : { firstColor: '#6366f1', secondColor: '#06b6d4' }
-            }
+            neonColors={{ firstColor: '#6366f1', secondColor: '#06b6d4' }}
             innerClassName="p-7 sm:p-8 bg-zinc-900/95"
           >
             {/* Cabeçalho Minimalista */}
@@ -148,66 +132,15 @@ export default function UnifiedLoginPage() {
                 </Backlight>
               </Link>
               <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-950/90 px-3 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-zinc-400">
-                <KeyRound className="h-3 w-3 text-amber-400" /> Supabase SSR • HttpOnly Cookies
+                <KeyRound className="h-3 w-3 text-amber-400" /> Acesso à sua conta
               </span>
               <h1 className="mt-2.5 text-2xl font-extrabold tracking-tight text-white">
                 Entrar na Konnexy
               </h1>
               <p className="mt-1 text-xs text-zinc-400">
-                Autenticação corporativa protegida por política de senha forte
+                Gerencie a página e as placas do seu estabelecimento.
               </p>
             </div>
-
-        {/* Seletor Rápido de Contexto RBAC */}
-        <div className="mt-6 grid grid-cols-2 gap-2.5">
-          <button
-            type="button"
-            disabled={isSubmitting}
-            onClick={() => {
-              setSelectedRole('super_admin');
-              setEmail('ceo@konnexy.app');
-              setPassword('Konnexy@2026!');
-              setErrorMessage(null);
-            }}
-            className={`flex flex-col items-start rounded-2xl border p-3 text-left transition ${
-              selectedRole === 'super_admin'
-                ? 'border-amber-500/60 bg-amber-500/10 text-white shadow-sm'
-                : 'border-zinc-800/90 bg-zinc-950/50 text-zinc-400 hover:border-zinc-700'
-            }`}
-          >
-            <ShieldCheck
-              className={`h-4 w-4 ${
-                selectedRole === 'super_admin' ? 'text-amber-400' : 'text-zinc-500'
-              }`}
-            />
-            <span className="mt-1.5 text-xs font-bold">Super Admin</span>
-            <span className="text-[10px] text-zinc-400">Gestão Multi-Tenant</span>
-          </button>
-
-          <button
-            type="button"
-            disabled={isSubmitting}
-            onClick={() => {
-              setSelectedRole('tenant_admin');
-              setEmail('contato@domcorleone.com.br');
-              setPassword('Konnexy@2026!');
-              setErrorMessage(null);
-            }}
-            className={`flex flex-col items-start rounded-2xl border p-3 text-left transition ${
-              selectedRole === 'tenant_admin'
-                ? 'border-indigo-500/60 bg-indigo-500/10 text-white shadow-sm'
-                : 'border-zinc-800/90 bg-zinc-950/50 text-zinc-400 hover:border-zinc-700'
-            }`}
-          >
-            <Store
-              className={`h-4 w-4 ${
-                selectedRole === 'tenant_admin' ? 'text-indigo-400' : 'text-zinc-500'
-              }`}
-            />
-            <span className="mt-1.5 text-xs font-bold">Lojista</span>
-            <span className="text-[10px] text-zinc-400">Painel do Comércio</span>
-          </button>
-        </div>
 
         {/* Alerta de erro padronizado (Anti-User-Enumeration) */}
         {errorMessage && (
@@ -223,7 +156,7 @@ export default function UnifiedLoginPage() {
               htmlFor="login-email"
               className="block text-xs font-semibold text-zinc-300"
             >
-              E-mail Corporativo
+              E-mail
             </label>
             <div className="relative mt-1.5">
               <Mail className="pointer-events-none absolute left-3.5 top-2.5 h-4 w-4 text-zinc-500" />
@@ -269,7 +202,7 @@ export default function UnifiedLoginPage() {
                 disabled={isSubmitting}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mín. 8 chars, A-z, 0-9 e especial"
+                placeholder="Sua senha"
                 className="w-full rounded-xl border border-zinc-800 bg-zinc-950/90 pl-10 pr-10 py-2.5 text-xs text-white placeholder-zinc-500 transition focus:border-zinc-500 focus:outline-none disabled:opacity-60"
               />
               <button

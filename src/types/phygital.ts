@@ -43,6 +43,9 @@ export interface Tenant {
   owner_email?: string;
   owner_phone?: string;
   taps_30d?: number;
+  nfc_30d?: number;
+  qr_30d?: number;
+  google_clicks_30d?: number;
   reviews_30d?: number;
   created_at: string;
 }

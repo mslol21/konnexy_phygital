@@ -34,17 +34,3 @@ export function logSecurityAudit(entry: Omit<SecurityAuditEntry, 'timestamp'>): 
     console.info(`[SECURITY_AUDIT][INFO]`, JSON.stringify(payload));
   }
 }
-
-/**
- * Gera assinatura determinística leve (Edge-safe) para validar integridade do papel RBAC nos cookies
- * e impedir escalação de privilégio via adulteração manual de cookie no navegador.
- */
-export function computeRoleSignature(role: string, secret: string): string {
-  let hash = 2166136261;
-  const input = `${role}:${secret}:konnexy-rbac-v1`;
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0).toString(16).padStart(8, '0');
-}

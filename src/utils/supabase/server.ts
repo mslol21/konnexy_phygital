@@ -1,7 +1,7 @@
 import 'server-only';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { env } from '@/lib/env';
+import { env, requireSupabaseConfig } from '@/lib/env';
 
 /**
  * Cliente Supabase SSR para Server Components, Server Actions e Route Handlers.
@@ -9,6 +9,7 @@ import { env } from '@/lib/env';
  * e proteção HttpOnly / SameSite=Lax.
  */
 export async function createClient() {
+  requireSupabaseConfig();
   const cookieStore = await cookies();
 
   return createServerClient(

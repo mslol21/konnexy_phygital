@@ -1,134 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractClientIp } from '@/lib/security/rate-limiter';
-import {
-  logSecurityAudit,
-  computeRoleSignature
-} from '@/lib/security/audit-logger';
-import { updateSupabaseSession } from '@/utils/supabase/middleware';
-
-const VALID_ROLES = new Set(['super_admin', 'tenant_admin']);
-const HMAC_SECRET =
-  process.env.SESSION_HMAC_SECRET || 'konnexy_default_hmac_secret_2026_safe';
-
-const CSP_HEADER = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' data: https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https://*.supabase.co https://*.googleapis.com https://*.gstatic.com",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://*.googleapis.com https://search.google.com https://*.upstash.io",
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "form-action 'self'"
-].join('; ');
-
-function applySecurityHeaders(res: NextResponse): NextResponse {
-  res.headers.set('X-Frame-Options', 'DENY');
-  res.headers.set('X-Content-Type-Options', 'nosniff');
-  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.headers.set(
-    'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(), browsing-topics=()'
-  );
-  res.headers.set('Content-Security-Policy', CSP_HEADER);
-  return res;
-}
-
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 export async function middleware(req: NextRequest) {
-  const { pathname, searchParams } = req.nextUrl;
-  const clientIp = extractClientIp(req);
-
-  // 1. Renova e valida o token JWT no Supabase SSR (se chaves ativas)
-  const { response: supabaseResponse } = await updateSupabaseSession(req);
-
-  // 2. Rotas Públicas e de Autenticação recebem os Security Headers sem bloqueio
-  if (
-    pathname.startsWith('/r/') ||
-    pathname.startsWith('/api/') ||
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/logos') ||
-    pathname === '/' ||
-    pathname === '/login' ||
-    pathname === '/forgot-password' ||
-    pathname === '/reset-password'
-  ) {
-    return applySecurityHeaders(supabaseResponse);
+  let response = NextResponse.next({ request: req });
+  const pathname = req.nextUrl.pathname;
+  const protectedPage = /^\/(dashboard|super-admin|admin)(\/|$)/.test(pathname);
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key || url.includes('sandbox-project')) {
+    if (protectedPage) return NextResponse.redirect(new URL('/login?error=unavailable', req.url));
+    return response;
   }
-
-  // 3. Validação de Integridade de Claims RBAC (Anti-Tampering)
-  const roleCookie = req.cookies.get('konnexy_role')?.value;
-  const sigCookie = req.cookies.get('konnexy_sig')?.value;
-
-  if (roleCookie) {
-    const expectedSig = computeRoleSignature(roleCookie, HMAC_SECRET);
-    const isRoleMalformed = !VALID_ROLES.has(roleCookie);
-    const isSigTampered = Boolean(sigCookie && sigCookie !== expectedSig);
-
-    if (isRoleMalformed || isSigTampered) {
-      logSecurityAudit({
-        action: 'SESSION_TAMPERING_BLOCKED',
-        actorRole: roleCookie || 'unknown',
-        clientIp,
-        path: pathname,
-        severity: 'CRITICAL',
-        metadata: {
-          reason: isRoleMalformed ? 'INVALID_ROLE_CLAIM' : 'INVALID_ROLE_SIGNATURE'
-        }
-      });
-
-      const loginUrl = req.nextUrl.clone();
-      loginUrl.pathname = '/login';
-      loginUrl.searchParams.set('error', 'tampered_session');
-      const redirectRes = NextResponse.redirect(loginUrl);
-      redirectRes.cookies.delete('konnexy_role');
-      redirectRes.cookies.delete('konnexy_sig');
-      return applySecurityHeaders(redirectRes);
+  const supabase = createServerClient(url, key, {
+    cookies: {
+      getAll: () => req.cookies.getAll(),
+      setAll(cookies: { name: string; value: string; options: CookieOptions }[]) {
+        cookies.forEach(({ name, value }) => req.cookies.set(name, value));
+        response = NextResponse.next({ request: req });
+        cookies.forEach(({ name, value, options }) => response.cookies.set(name, value, { ...options, httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' }));
+      }
     }
+  });
+  const { data: { user } } = await supabase.auth.getUser();
+  const redirectTo = (path: string) => {
+    const redirect = NextResponse.redirect(new URL(path, req.url));
+    response.cookies.getAll().forEach(cookie => redirect.cookies.set(cookie));
+    return redirect;
+  };
+  if (protectedPage && !user) return redirectTo('/login');
+  if (protectedPage && user) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (!profile || !['super_admin', 'tenant_admin'].includes(profile.role)) return redirectTo('/login?error=access');
+    if (/^\/(admin|super-admin)(\/|$)/.test(pathname) && profile.role !== 'super_admin') return redirectTo('/dashboard?denied=1');
   }
-
-  // 4. Controle de Acesso Estrito ao /super-admin e /admin
-  if (pathname.startsWith('/super-admin') || pathname.startsWith('/admin')) {
-    if (roleCookie === 'tenant_admin') {
-      logSecurityAudit({
-        action: 'SESSION_TAMPERING_BLOCKED',
-        actorRole: 'tenant_admin',
-        clientIp,
-        path: pathname,
-        severity: 'WARN',
-        metadata: { reason: 'TENANT_ADMIN_ATTEMPTED_SUPER_ADMIN_ROUTE' }
-      });
-
-      const url = req.nextUrl.clone();
-      url.pathname = '/dashboard';
-      url.searchParams.set('denied', 'super_admin_only');
-      return applySecurityHeaders(NextResponse.redirect(url));
-    }
-
-    logSecurityAudit({
-      action: 'SUPER_ADMIN_DASHBOARD_ACCESS',
-      actorRole: roleCookie || 'super_admin_dev',
-      clientIp,
-      path: pathname,
-      severity: 'INFO'
-    });
-  }
-
-  // 5. Auditoria de Impersonation quando Super Admin gerencia perfil específico (?tenant=slug)
-  const impersonatedTenant = searchParams.get('tenant');
-  if (pathname.startsWith('/dashboard') && impersonatedTenant) {
-    logSecurityAudit({
-      action: 'SUPER_ADMIN_TENANT_IMPERSONATION',
-      actorRole: roleCookie || 'super_admin',
-      clientIp,
-      path: pathname,
-      targetTenant: impersonatedTenant,
-      severity: 'INFO'
-    });
-  }
-
-  return applySecurityHeaders(supabaseResponse);
+  if (protectedPage || pathname.startsWith('/api/manage')) response.headers.set('Cache-Control', 'private, no-store');
+  return response;
 }
-
-export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']
-};
+export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|logos/|covers/).*)'] };
