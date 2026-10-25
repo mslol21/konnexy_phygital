@@ -38,4 +38,4 @@ export async function middleware(req: NextRequest) {
   if (protectedPage || pathname.startsWith('/api/manage')) response.headers.set('Cache-Control', 'private, no-store');
   return response;
 }
-export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|logos/|covers/).*)'] };
+export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|logos/|covers/).*)'] };

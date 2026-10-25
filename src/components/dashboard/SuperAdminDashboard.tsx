@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -16,7 +16,6 @@ import {
   Activity,
   Ban,
   QrCode,
-  SlidersHorizontal,
   X,
   ArrowUpRight,
   Settings2
@@ -71,37 +70,77 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
     plan_tier: 'pro' as PlanTier
   });
 
-
+  // Abre o modal de novo comércio automaticamente quando acionado pelo atalho mobile (?new=1)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('new') === '1') {
+      setIsProvisionModalOpen(true);
+    }
+  }, []);
 
   const tenants = Object.values(tenantsMap).map((r) => r.tenant);
 
   const persist = async (record: TenantFullRecord) => {
     setSaving(true);
-    try { setTenantsMap(await saveTenant(record)); toast.success('Alteração salva.'); }
-    catch (error) { toast.error(error instanceof Error ? error.message : 'Não foi possível salvar.'); }
-    finally { setSaving(false); }
+    try {
+      setTenantsMap(await saveTenant(record));
+      toast.success('Alteração salva.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar.');
+    } finally {
+      setSaving(false);
+    }
   };
+
   const handleStatusChange = (slug: string, status: TenantStatus) => {
-    const record = tenantsMap[slug]; if (!record) return;
+    const record = tenantsMap[slug];
+    if (!record) return;
     void persist({ ...record, tenant: { ...record.tenant, status } });
   };
+
   const handlePlanChange = (slug: string, plan: PlanTier) => {
-    const record = tenantsMap[slug]; if (!record) return;
+    const record = tenantsMap[slug];
+    if (!record) return;
     void persist({ ...record, tenant: { ...record.tenant, plan_tier: plan } });
   };
+
   const handleCreateTenant = async (e: React.FormEvent) => {
-    e.preventDefault(); if (saving) return;
+    e.preventDefault();
+    if (saving) return;
     setSaving(true);
     try {
-      const slug = newTenantForm.slug.trim() || newTenantForm.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+      const slug =
+        newTenantForm.slug.trim() ||
+        newTenantForm.name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
       const { records, id } = await createTenant({ ...newTenantForm, slug });
       setTenantsMap(records);
       setIsProvisionModalOpen(false);
-      setSelectedTenantForStudio(Object.values(records).find(r => r.tenant.id === id)?.tenant || null);
+      setSelectedTenantForStudio(
+        Object.values(records).find((r) => r.tenant.id === id)?.tenant || null
+      );
       toast.success('Estabelecimento cadastrado no banco.');
-      setNewTenantForm({ name:'', slug:'', nicho:'Comércio Local', bio:'', owner_email:'', whatsapp_feedback:'', google_place_id:'', primary_color:'#6366F1', plan_tier:'starter' });
-    } catch (error) { toast.error(error instanceof Error ? error.message : 'Não foi possível cadastrar.'); }
-    finally { setSaving(false); }
+      setNewTenantForm({
+        name: '',
+        slug: '',
+        nicho: 'Comércio Local',
+        bio: '',
+        owner_email: '',
+        whatsapp_feedback: '',
+        google_place_id: '',
+        primary_color: '#6366F1',
+        plan_tier: 'starter'
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível cadastrar.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const activeTenants = tenants.filter((t) => t.status === 'active' || t.status === 'trial');
@@ -125,26 +164,26 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
 
   return (
     <fieldset disabled={saving} className="min-h-screen bg-zinc-950 text-zinc-100 p-4 sm:p-8 lg:p-10">
-      <div className="mx-auto max-w-7xl space-y-8">
+      <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8">
         {/* TOPBAR DO SUPER ADMIN */}
         <header className="flex flex-col justify-between gap-4 border-b border-zinc-800/80 pb-6 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3.5 sm:gap-4">
             <img
               src="/logos/konnexy-logo.svg"
               alt="Konnexy Tag"
-              className="h-12 w-12 rounded-2xl shadow-lg"
+              className="h-11 w-11 sm:h-12 sm:w-12 rounded-2xl shadow-lg"
             />
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400">
-                  <ShieldCheck className="h-3 w-3" /> Administrador
+                  <ShieldCheck className="h-3 w-3" /> Administrador Master
                 </span>
                 <span className="text-xs text-zinc-500 font-mono">
-                  Administração de estabelecimentos
+                  Controle Mobile & Desktop
                 </span>
               </div>
-              <h1 className="mt-1 text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-                Konnexy HQ • Gestão de Comércios & Mensalidades
+              <h1 className="mt-1 text-xl sm:text-3xl font-extrabold tracking-tight text-white">
+                Konnexy HQ • Gestão de Comércios
               </h1>
             </div>
           </div>
@@ -152,117 +191,119 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
           <div className="flex flex-wrap items-center gap-2.5">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 transition"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 transition"
             >
               <Store className="h-4 w-4 text-indigo-400" />
-              Gerenciador de Perfis (/dashboard)
+              Editor de Lojas
             </Link>
 
             <motion.button
               type="button"
               whileTap={{ scale: 0.97 }}
               onClick={() => setIsProvisionModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs sm:text-sm font-bold text-zinc-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs sm:text-sm font-bold text-zinc-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition"
             >
               <Plus className="h-4 w-4" />
-              Provisionar Novo Comércio
+              Novo Comércio
             </motion.button>
           </div>
         </header>
 
-        {/* 1. KPIS FINANCEIROS & OPERACIONAIS */}
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-3xl border border-zinc-800/90 bg-zinc-900/70 p-5">
+        {/* 1. KPIS FINANCEIROS & OPERACIONAIS (2x2 COMPACTO NO CELULAR, 4 COLUNAS NO DESKTOP) */}
+        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <div className="rounded-3xl border border-zinc-800/90 bg-zinc-900/70 p-4 sm:p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-zinc-400">
-                Mensalidades contratadas (MRR)
+              <span className="text-[11px] sm:text-xs font-semibold text-zinc-400">
+                Mensalidades (MRR)
               </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
                 <DollarSign className="h-4 w-4" />
               </div>
             </div>
-            <p className="mt-3 text-3xl font-extrabold tracking-tight text-white">
+            <p className="mt-2.5 text-xl sm:text-3xl font-extrabold tracking-tight text-white">
               {formatCurrencyBRL(totalMrrCents)}
             </p>
-            <p className="mt-1 text-xs text-emerald-400 font-medium">
-              ARR Projetado: {formatCurrencyBRL(totalMrrCents * 12)}/ano
+            <p className="mt-1 text-[11px] text-emerald-400 font-medium truncate">
+              ARR: {formatCurrencyBRL(totalMrrCents * 12)}/ano
             </p>
           </div>
 
-          <div className="rounded-3xl border border-zinc-800/90 bg-zinc-900/70 p-5">
+          <div className="rounded-3xl border border-zinc-800/90 bg-zinc-900/70 p-4 sm:p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-zinc-400">
-                Comércios Ativos & Trial
+              <span className="text-[11px] sm:text-xs font-semibold text-zinc-400">
+                Ativos & Trial
               </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
                 <Store className="h-4 w-4" />
               </div>
             </div>
-            <p className="mt-3 text-3xl font-extrabold tracking-tight text-white">
+            <p className="mt-2.5 text-xl sm:text-3xl font-extrabold tracking-tight text-white">
               {activeTenants.length}{' '}
-              <span className="text-sm font-normal text-zinc-500">/ {tenants.length} total</span>
+              <span className="text-xs sm:text-sm font-normal text-zinc-500">
+                / {tenants.length}
+              </span>
             </p>
-            <p className="mt-1 text-xs text-zinc-400">
-              Placas NFC/QR operando em tempo real
+            <p className="mt-1 text-[11px] text-zinc-400 truncate">
+              Placas NFC/QR ativas
             </p>
           </div>
 
-          <div className="rounded-3xl border border-zinc-800/90 bg-zinc-900/70 p-5">
+          <div className="rounded-3xl border border-zinc-800/90 bg-zinc-900/70 p-4 sm:p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-zinc-400">
-                Placas Suspensas (Inadimplência)
+              <span className="text-[11px] sm:text-xs font-semibold text-zinc-400">
+                Suspensas
               </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/10 text-rose-400">
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-rose-500/10 text-rose-400">
                 <Ban className="h-4 w-4" />
               </div>
             </div>
-            <p className="mt-3 text-3xl font-extrabold tracking-tight text-rose-400">
+            <p className="mt-2.5 text-xl sm:text-3xl font-extrabold tracking-tight text-rose-400">
               {suspendedTenants.length}
             </p>
-            <p className="mt-1 text-xs text-zinc-400">
-              Kill-Switch ativo bloqueando acesso público
+            <p className="mt-1 text-[11px] text-zinc-400 truncate">
+              Kill-Switch ativo
             </p>
           </div>
 
-          <div className="rounded-3xl border border-zinc-800/90 bg-zinc-900/70 p-5">
+          <div className="rounded-3xl border border-zinc-800/90 bg-zinc-900/70 p-4 sm:p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-zinc-400">
-                Tráfego Phygital da Rede (30d)
+              <span className="text-[11px] sm:text-xs font-semibold text-zinc-400">
+                Tráfego (30d)
               </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
                 <Activity className="h-4 w-4" />
               </div>
             </div>
-            <p className="mt-3 text-3xl font-extrabold tracking-tight text-white">
+            <p className="mt-2.5 text-xl sm:text-3xl font-extrabold tracking-tight text-white">
               {totalTapsNetwork.toLocaleString('pt-BR')}
             </p>
-            <p className="mt-1 text-xs text-amber-400 font-medium">
-              Aproximações NFC + Leituras QR Code
+            <p className="mt-1 text-[11px] text-amber-400 font-medium truncate">
+              Leituras NFC + QR
             </p>
           </div>
         </section>
 
-        {/* 2. TABELA DE GESTÃO DE TENANTS + BOTÃO "GERENCIAR PERFIL" */}
-        <section className="rounded-3xl border border-zinc-800/90 bg-zinc-900/80 p-6 shadow-xl">
+        {/* 2. CONTROLE MULTI-TENANT (CARDS MOBILE + TABELA DESKTOP) */}
+        <section className="rounded-3xl border border-zinc-800/90 bg-zinc-900/80 p-4 sm:p-6 shadow-xl">
           <div className="flex flex-col justify-between gap-4 border-b border-zinc-800 pb-5 lg:flex-row lg:items-center">
             <div>
-              <h2 className="text-lg font-bold tracking-tight text-white">
+              <h2 className="text-base sm:text-lg font-bold tracking-tight text-white">
                 Base de Comércios Cadastrados (Multi-Tenant Control)
               </h2>
               <p className="text-xs text-zinc-400">
-                Clique em <strong className="text-indigo-400">Gerenciar Perfil</strong> para editar módulos, cardápio, Pix, Wi-Fi e logo de qualquer comércio.
+                Toque em <strong className="text-indigo-400">Gerenciar Perfil</strong> para editar módulos, cardápio, Pix, Wi-Fi e logo pelo celular ou computador.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
-              <div className="relative">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-full sm:w-64">
                 <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
                 <input
                   type="text"
                   placeholder="Buscar comércio, slug ou e-mail..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 rounded-xl border border-zinc-800 bg-zinc-950 pl-9 pr-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none"
+                  className="w-full rounded-xl border border-zinc-800 bg-zinc-950 pl-9 pr-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none"
                 />
               </div>
 
@@ -289,19 +330,28 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
             </div>
           </div>
 
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-zinc-800/80 text-[11px] font-mono uppercase tracking-wider text-zinc-500">
-                  <th className="pb-3 pl-2">Estabelecimento / Slug</th>
-                  <th className="pb-3">Status da Placa</th>
-                  <th className="pb-3">Plano & Limites</th>
-                  <th className="pb-3">Mensalidade (MRR)</th>
-                  <th className="pb-3">Tráfego 30d</th>
-                  <th className="pb-3 text-right pr-2">Ações Super Admin</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/60 text-xs">
+          {filteredTenants.length === 0 ? (
+            <div className="mt-6 rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/60 p-8 text-center">
+              <Store className="mx-auto h-10 w-10 text-amber-400/80" />
+              <h3 className="mt-3 text-sm font-bold text-white">
+                Nenhum estabelecimento encontrado nesta visualização
+              </h3>
+              <p className="mt-1 text-xs text-zinc-400 max-w-md mx-auto">
+                Cadastre um novo comércio agora mesmo para gerar sua página inteligente, QR Code 300 DPI e link NFC.
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsProvisionModalOpen(true)}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-zinc-950 shadow-lg hover:bg-amber-400 transition"
+              >
+                <Plus className="h-4 w-4" />
+                Cadastrar Primeiro Comércio Agora
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* VISÃO MOBILE EM CARDS DE CONTROLE RÁPIDO (md:hidden) */}
+              <div className="mt-4 space-y-3 md:hidden">
                 {filteredTenants.map((t) => {
                   const st = t.status || 'active';
                   const plan = t.plan_tier || 'pro';
@@ -309,9 +359,12 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                   const planMeta = PLAN_LIMITS[plan];
 
                   return (
-                    <tr key={t.id} className="group hover:bg-zinc-950/50 transition">
-                      <td className="py-4 pl-2 pr-4">
-                        <div className="flex items-center gap-3">
+                    <div
+                      key={t.id}
+                      className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 space-y-3.5"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                           <div
                             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 font-bold text-white overflow-hidden shadow-md"
                             style={{ backgroundColor: t.primary_color }}
@@ -326,118 +379,263 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                               <span>{t.name.slice(0, 2).toUpperCase()}</span>
                             )}
                           </div>
-                          <div>
-                            <div className="font-bold text-white flex items-center gap-1.5">
+                          <div className="min-w-0">
+                            <h3 className="font-bold text-sm text-white truncate">
                               {t.name}
-                            </div>
-                            <div className="flex items-center gap-2 text-[11px] text-zinc-400">
-                              <code className="font-mono text-amber-400/90">/r/{t.slug}</code>
-                              <span>•</span>
-                              <span>{t.nicho}</span>
-                            </div>
+                            </h3>
+                            <p className="text-[11px] font-mono text-amber-400 truncate">
+                              /r/{t.slug}
+                            </p>
                           </div>
                         </div>
-                      </td>
 
-                      {/* Seletor Direto de Status */}
-                      <td className="py-4 pr-4">
-                        <div className="inline-flex items-center gap-2">
-                          <span
-                            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusMeta.classes}`}
-                          >
-                            <span className={`h-1.5 w-1.5 rounded-full ${statusMeta.dot}`} />
-                            {statusMeta.label}
-                          </span>
+                        <span
+                          className={`shrink-0 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${statusMeta.classes}`}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full ${statusMeta.dot}`} />
+                          {statusMeta.label}
+                        </span>
+                      </div>
+
+                      {/* Seletores Rápidos de Status e Plano no Celular */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-mono uppercase text-zinc-500 mb-1">
+                            Status da Placa
+                          </label>
                           <select
                             aria-label={`Alterar status de ${t.name}`}
                             value={st}
                             onChange={(e) =>
                               handleStatusChange(t.slug, e.target.value as TenantStatus)
                             }
-                            className="rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 text-[11px] font-semibold text-zinc-300 focus:border-amber-500 focus:outline-none"
+                            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 py-2 text-xs font-semibold text-zinc-200 focus:border-amber-500 focus:outline-none"
                           >
                             <option value="active">Ativar</option>
                             <option value="trial">Trial</option>
-                            <option value="suspended">Suspender (Bloquear)</option>
+                            <option value="suspended">Suspender</option>
                             <option value="canceled">Cancelar</option>
                           </select>
                         </div>
-                      </td>
 
-                      {/* Seletor Direto de Plano */}
-                      <td className="py-4 pr-4">
-                        <select
-                          aria-label={`Alterar plano de ${t.name}`}
-                          value={plan}
-                          onChange={(e) =>
-                            handlePlanChange(t.slug, e.target.value as PlanTier)
-                          }
-                          className={`rounded-xl border px-3 py-1.5 text-xs font-bold focus:outline-none bg-zinc-950 ${planMeta.badgeColor}`}
+                        <div>
+                          <label className="block text-[10px] font-mono uppercase text-zinc-500 mb-1">
+                            Plano Contratado
+                          </label>
+                          <select
+                            aria-label={`Alterar plano de ${t.name}`}
+                            value={plan}
+                            onChange={(e) =>
+                              handlePlanChange(t.slug, e.target.value as PlanTier)
+                            }
+                            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 py-2 text-xs font-bold text-amber-400 focus:border-amber-500 focus:outline-none"
+                          >
+                            <option value="starter">Starter</option>
+                            <option value="pro">Pro Phygital</option>
+                            <option value="enterprise">Enterprise</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Resumo Financeiro & Tráfego */}
+                      <div className="flex items-center justify-between rounded-xl bg-zinc-900/70 px-3 py-2 text-xs">
+                        <div>
+                          <span className="text-zinc-400">MRR: </span>
+                          <strong className="text-white">
+                            {formatCurrencyBRL(t.mrr_cents || planMeta.monthlyPriceCents)}
+                          </strong>
+                        </div>
+                        <div className="text-amber-400 font-semibold">
+                          {t.taps_30d || 0} toques • ★ {t.google_clicks_30d ?? 0}
+                        </div>
+                      </div>
+
+                      {/* Botões de Ação Mobile */}
+                      <div className="grid grid-cols-3 gap-2 pt-1">
+                        <Link
+                          href={`/dashboard?tenant=${t.slug}`}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-2.5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 transition"
                         >
-                          <option value="starter">Starter (Até 3 Módulos)</option>
-                          <option value="pro">Pro Phygital (Até 6 Módulos)</option>
-                          <option value="enterprise">Enterprise Full (Ilimitado)</option>
-                        </select>
-                      </td>
+                          <Settings2 className="h-3.5 w-3.5" />
+                          Editar
+                        </Link>
 
-                      {/* MRR */}
-                      <td className="py-4 pr-4">
-                        <div className="font-bold text-white">
-                          {formatCurrencyBRL(t.mrr_cents || planMeta.monthlyPriceCents)}
-                          <span className="text-[10px] font-normal text-zinc-500">/mês</span>
-                        </div>
-                        <div className="text-[11px] text-zinc-500">
-                          Venc: {t.next_billing_date || '15/11/2026'}
-                        </div>
-                      </td>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTenantForStudio(t)}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-800/90 px-2.5 py-2.5 text-xs font-semibold text-white hover:bg-zinc-700 transition"
+                        >
+                          <QrCode className="h-3.5 w-3.5 text-amber-400" />
+                          Placa QR
+                        </button>
 
-                      {/* Telemetria */}
-                      <td className="py-4 pr-4">
-                        <div className="font-semibold text-zinc-200">
-                          {t.taps_30d || 0} toques
-                        </div>
-                        <div className="text-[11px] text-amber-400">
-                          ★ {t.google_clicks_30d ?? 0} cliques para o Google
-                        </div>
-                      </td>
-
-                      {/* Ações Rápidas: GERENCIAR PERFIL + GERAR PLACA + TESTAR LINK */}
-                      <td className="py-4 pr-2 text-right">
-                        <div className="inline-flex items-center gap-2">
-                          <Link
-                            href={`/dashboard?tenant=${t.slug}`}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 transition"
-                          >
-                            <Settings2 className="h-3.5 w-3.5" />
-                            Gerenciar Perfil
-                          </Link>
-
-                          <button
-                            type="button"
-                            onClick={() => setSelectedTenantForStudio(t)}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-800/90 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700 transition"
-                          >
-                            <QrCode className="h-3.5 w-3.5 text-amber-400" />
-                            Gerar Placa
-                          </button>
-
-                          <a
-                            href={`/r/${t.slug}?src=nfc`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-zinc-700 hover:text-white transition"
-                          >
-                            Testar Link
-                            <ArrowUpRight className="h-3.5 w-3.5" />
-                          </a>
-                        </div>
-                      </td>
-                    </tr>
+                        <a
+                          href={`/r/${t.slug}?src=nfc`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white transition"
+                        >
+                          Abrir
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </div>
+
+              {/* VISÃO DESKTOP EM TABELA COMPLETA (hidden md:block) */}
+              <div className="mt-5 hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-zinc-800/80 text-[11px] font-mono uppercase tracking-wider text-zinc-500">
+                      <th className="pb-3 pl-2">Estabelecimento / Slug</th>
+                      <th className="pb-3">Status da Placa</th>
+                      <th className="pb-3">Plano & Limites</th>
+                      <th className="pb-3">Mensalidade (MRR)</th>
+                      <th className="pb-3">Tráfego 30d</th>
+                      <th className="pb-3 text-right pr-2">Ações Super Admin</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60 text-xs">
+                    {filteredTenants.map((t) => {
+                      const st = t.status || 'active';
+                      const plan = t.plan_tier || 'pro';
+                      const statusMeta = STATUS_BADGES[st];
+                      const planMeta = PLAN_LIMITS[plan];
+
+                      return (
+                        <tr key={t.id} className="group hover:bg-zinc-950/50 transition">
+                          <td className="py-4 pl-2 pr-4">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 font-bold text-white overflow-hidden shadow-md"
+                                style={{ backgroundColor: t.primary_color }}
+                              >
+                                {t.logo_url ? (
+                                  <img
+                                    src={t.logo_url}
+                                    alt={t.name}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <span>{t.name.slice(0, 2).toUpperCase()}</span>
+                                )}
+                              </div>
+                              <div>
+                                <div className="font-bold text-white flex items-center gap-1.5">
+                                  {t.name}
+                                </div>
+                                <div className="flex items-center gap-2 text-[11px] text-zinc-400">
+                                  <code className="font-mono text-amber-400/90">/r/{t.slug}</code>
+                                  <span>•</span>
+                                  <span>{t.nicho}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Seletor Direto de Status */}
+                          <td className="py-4 pr-4">
+                            <div className="inline-flex items-center gap-2">
+                              <span
+                                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusMeta.classes}`}
+                              >
+                                <span className={`h-1.5 w-1.5 rounded-full ${statusMeta.dot}`} />
+                                {statusMeta.label}
+                              </span>
+                              <select
+                                aria-label={`Alterar status de ${t.name}`}
+                                value={st}
+                                onChange={(e) =>
+                                  handleStatusChange(t.slug, e.target.value as TenantStatus)
+                                }
+                                className="rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 text-[11px] font-semibold text-zinc-300 focus:border-amber-500 focus:outline-none"
+                              >
+                                <option value="active">Ativar</option>
+                                <option value="trial">Trial</option>
+                                <option value="suspended">Suspender (Bloquear)</option>
+                                <option value="canceled">Cancelar</option>
+                              </select>
+                            </div>
+                          </td>
+
+                          {/* Seletor Direto de Plano */}
+                          <td className="py-4 pr-4">
+                            <select
+                              aria-label={`Alterar plano de ${t.name}`}
+                              value={plan}
+                              onChange={(e) =>
+                                handlePlanChange(t.slug, e.target.value as PlanTier)
+                              }
+                              className={`rounded-xl border px-3 py-1.5 text-xs font-bold focus:outline-none bg-zinc-950 ${planMeta.badgeColor}`}
+                            >
+                              <option value="starter">Starter (Até 3 Módulos)</option>
+                              <option value="pro">Pro Phygital (Até 6 Módulos)</option>
+                              <option value="enterprise">Enterprise Full (Ilimitado)</option>
+                            </select>
+                          </td>
+
+                          {/* MRR */}
+                          <td className="py-4 pr-4">
+                            <div className="font-bold text-white">
+                              {formatCurrencyBRL(t.mrr_cents || planMeta.monthlyPriceCents)}
+                              <span className="text-[10px] font-normal text-zinc-500">/mês</span>
+                            </div>
+                            <div className="text-[11px] text-zinc-500">
+                              Venc: {t.next_billing_date || '15/11/2026'}
+                            </div>
+                          </td>
+
+                          {/* Telemetria */}
+                          <td className="py-4 pr-4">
+                            <div className="font-semibold text-zinc-200">
+                              {t.taps_30d || 0} toques
+                            </div>
+                            <div className="text-[11px] text-amber-400">
+                              ★ {t.google_clicks_30d ?? 0} cliques para o Google
+                            </div>
+                          </td>
+
+                          {/* Ações Rápidas: GERENCIAR PERFIL + GERAR PLACA + TESTAR LINK */}
+                          <td className="py-4 pr-2 text-right">
+                            <div className="inline-flex items-center gap-2">
+                              <Link
+                                href={`/dashboard?tenant=${t.slug}`}
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 transition"
+                              >
+                                <Settings2 className="h-3.5 w-3.5" />
+                                Gerenciar Perfil
+                              </Link>
+
+                              <button
+                                type="button"
+                                onClick={() => setSelectedTenantForStudio(t)}
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-800/90 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700 transition"
+                              >
+                                <QrCode className="h-3.5 w-3.5 text-amber-400" />
+                                Gerar Placa
+                              </button>
+
+                              <a
+                                href={`/r/${t.slug}?src=nfc`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-zinc-700 hover:text-white transition"
+                              >
+                                Testar Link
+                                <ArrowUpRight className="h-3.5 w-3.5" />
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </section>
 
         {/* 3. ESTÚDIO DE PLACA ACRÍLICA DO CLIENTE SELECIONADO */}
@@ -488,7 +686,7 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative z-10 w-full max-w-lg rounded-3xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8 shadow-2xl"
+              className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8 shadow-2xl"
             >
               <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
                 <div>

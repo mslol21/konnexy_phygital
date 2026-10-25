@@ -2,11 +2,12 @@
 
 const cspDirectives = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' https://vercel.live",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https://*.supabase.co https://*.googleapis.com https://*.gstatic.com",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://*.googleapis.com https://search.google.com https://*.upstash.io",
+  "img-src 'self' data: blob: https://*.supabase.co https://*.googleapis.com https://*.gstatic.com https://vercel.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://*.googleapis.com https://search.google.com https://*.upstash.io https://vercel.live wss://ws-us3.pusher.com",
+  "frame-src 'self' https://vercel.live",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'"
