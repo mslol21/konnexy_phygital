@@ -842,11 +842,11 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                 <div className="grid sm:grid-cols-2 gap-3.5">
                   <div>
                     <label className="block text-xs font-semibold text-zinc-400">
-                      Google Place ID
+                      Link do Google Maps / Avaliação (ou Place ID)
                     </label>
                     <input
                       type="text"
-                      placeholder="ChIJ..."
+                      placeholder="https://maps.app.goo.gl/... ou ChIJ..."
                       value={newTenantForm.google_place_id}
                       onChange={(e) =>
                         setNewTenantForm({

@@ -570,7 +570,7 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
 
                   <div>
                     <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400">
-                      Google Place ID Oficial
+                      Link do Google Maps / Avaliação (ou Place ID)
                     </label>
                     <input
                       type="text"
