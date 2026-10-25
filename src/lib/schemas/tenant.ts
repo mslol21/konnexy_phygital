@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isDemoSlug } from '@/lib/demo-tenants';
 const text = (max: number) => z.string().trim().max(max);
 const webUrl = text(2048).refine(value => {
   if (!value) return true;
@@ -6,7 +7,7 @@ const webUrl = text(2048).refine(value => {
 }, 'Use um endereço HTTPS válido.');
 const imageUrl = text(2048).refine(value => !value || /^\/(logos|covers)\/[a-zA-Z0-9_.-]+$/.test(value) || /^https:\/\//.test(value), 'Envie a imagem pelo botão de upload.').nullable().optional();
 export const tenantSchema = z.object({
-  slug: text(80).min(2).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  slug: text(80).min(2).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).refine(slug => !isDemoSlug(slug), 'Este endereço está reservado para uma demonstração.'),
   name: text(120).min(2), nicho: text(120).min(2), bio: text(1000).nullable().optional(),
   logo_url: imageUrl, cover_url: imageUrl,
   primary_color: z.string().regex(/^#[0-9a-fA-F]{6}$/),

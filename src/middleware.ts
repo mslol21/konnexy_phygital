@@ -3,6 +3,9 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 export async function middleware(req: NextRequest) {
   let response = NextResponse.next({ request: req });
   const pathname = req.nextUrl.pathname;
+  // Public pages have no session requirement. A stale auth cookie or unavailable
+  // Supabase project must not prevent an independent example from rendering.
+  if (pathname === '/' || /^\/(r|t|api\/public)(\/|$)/.test(pathname)) return response;
   const protectedPage = /^\/(dashboard|super-admin|admin)(\/|$)/.test(pathname);
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

@@ -41,6 +41,7 @@ import type {
 interface BentoModulesGridProps {
   tenant: Tenant;
   modules: TenantModule[];
+  demo?: boolean;
 }
 
 type DrawerState =
@@ -50,7 +51,7 @@ type DrawerState =
   | { type: 'pix'; title: string; cfg: PixFacilConfig }
   | null;
 
-export function BentoModulesGrid({ tenant, modules }: BentoModulesGridProps) {
+export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModulesGridProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeDrawer, setActiveDrawer] = useState<DrawerState>(null);
   const [drawerQrSvg, setDrawerQrSvg] = useState<string | null>(null);
@@ -110,7 +111,7 @@ export function BentoModulesGrid({ tenant, modules }: BentoModulesGridProps) {
             case 'whatsapp_direct': {
               const cfg = (mod.config_data || {}) as WhatsAppDirectConfig;
               const cleanPhone = (cfg.phone || '').replace(/\D/g, '');
-              if (!cleanPhone) return null;
+              if (!cleanPhone && !demo) return null;
               const msg =
                 cfg.default_message ||
                 `Olá! Estou na ${tenant.name} e acessei a placa inteligente.`;
@@ -119,7 +120,7 @@ export function BentoModulesGrid({ tenant, modules }: BentoModulesGridProps) {
               return (
                 <motion.a
                   key={mod.id}
-                  href={waHref}
+                  href={demo ? undefined : waHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   whileHover={{ y: -2 }}

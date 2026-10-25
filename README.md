@@ -61,7 +61,7 @@ Depois de migrar:
 - Todas as pessoas podem acessar o Google, independentemente da opinião. A assistência opcional apenas revisa o relato escrito pelo cliente, sem publicação automática.
 - Os indicadores mostram eventos registrados nos últimos 30 dias. Cliques no Google **não são avaliações publicadas**, e acessos não representam visitantes únicos. Os eventos podem ser afetados por bloqueadores e automação.
 - Abrir o WhatsApp não comprova envio. Pix oferece cópia da chave; não gera QR de pagamento a partir de uma chave bruta.
-- Exemplos continuam em `/r/barbearia-premium` e nas outras rotas existentes, identificados como fictícios. Suas ações ficam desativadas e não entram nas métricas ou mensalidades.
+- Exemplos continuam em `/r/barbearia-premium` e nas outras rotas existentes, identificados como fictícios. Seus dados são fixtures locais explícitas, independentes de Supabase, sessão e migrações; esses endereços são reservados. Nenhum cliente real recebe dados de demonstração como fallback. Suas ações ficam desativadas e não entram nas métricas ou mensalidades.
 - Placas novas usam `/t/UUID?src=nfc` ou `?src=qr`. A rota consulta o slug atual sem cache permanente. Exportação bloqueada enquanto não houver domínio configurado.
 
 ## Validação

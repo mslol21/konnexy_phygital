@@ -41,7 +41,7 @@ export function MicroPageClient({ tenant, modules, accessSource, demo = false }:
     </NeonGradientCard>
     {reviews && <section className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 space-y-4">
       <h2 className="text-xl font-bold">Como foi sua experiência?</h2><p className="text-sm text-zinc-600 dark:text-zinc-300">Sua opinião é bem-vinda. Você pode avaliar no Google ou conversar com a empresa.</p>
-      {googleUrl ? <a href={googleUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackEvent(tenant.id,accessSource,'module_click','google_reviews')} className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white">Avaliar no Google <ExternalLink size={16}/></a> : <p className="text-sm text-zinc-500">O link de avaliação ainda não foi configurado.</p>}
+      {googleUrl || demo ? <a href={demo ? undefined : googleUrl || undefined} target="_blank" rel="noopener noreferrer" onClick={()=>trackEvent(tenant.id,accessSource,'module_click','google_reviews')} className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white">Avaliar no Google <ExternalLink size={16}/></a> : <p className="text-sm text-zinc-500">O link de avaliação ainda não foi configurado.</p>}
       {waUrl && <a href={waUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-xl border border-emerald-600 px-4 py-3 font-semibold text-emerald-700 dark:text-emerald-400"><MessageCircle size={18}/>Conversar com a empresa</a>}
       <details className="border-t border-zinc-200 dark:border-zinc-800 pt-4"><summary className="cursor-pointer font-medium text-sm">Quer organizar seu relato antes de avaliar?</summary>
         <label htmlFor="experience" className="block mt-4 mb-2 text-sm">Conte sua experiência com suas palavras</label><textarea id="experience" rows={4} maxLength={1000} value={experience} onChange={e=>{setExperience(e.target.value);setSuggestion('');}} className="w-full rounded-xl border border-zinc-300 dark:border-zinc-700 bg-transparent p-3 text-sm" placeholder="O que aconteceu durante seu atendimento?"/>
@@ -51,7 +51,7 @@ export function MicroPageClient({ tenant, modules, accessSource, demo = false }:
         {waUrl && <p className="mt-4 text-xs text-zinc-500">Ao abrir o WhatsApp, revise a mensagem e toque em Enviar. Abrir a conversa não confirma o envio.</p>}
       </details>
     </section>}
-    <BentoModulesGrid tenant={tenant} modules={modules}/>
+    <BentoModulesGrid tenant={tenant} modules={modules} demo={demo}/>
     </div>
     <footer className="text-center py-4 text-xs text-zinc-500">Konnexy Tag · Conexões que aproximam</footer>
   </main></div></div>;

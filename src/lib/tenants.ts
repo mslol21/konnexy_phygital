@@ -1,4 +1,5 @@
 import 'server-only';
+import { getDemoTenant } from '@/lib/demo-tenants';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { requireSession, AccessError } from '@/lib/auth/session';
 import { toPublicTenantDTO } from '@/lib/dto/public-tenant.dto';
@@ -24,6 +25,8 @@ export async function listManagedTenants() {
   })) as Record<string, TenantRecord>;
 }
 export async function getPublicTenant(value: string, byId = false) {
+  const demo = getDemoTenant(value, byId);
+  if (demo) return demo;
   const admin = createAdminClient();
   const { data, error } = await admin.from('tenants').select('id,slug,name,nicho,bio,logo_url,cover_url,primary_color,google_place_id,whatsapp_feedback,status,created_at,is_active,plan_tier,is_demo').eq(byId ? 'id' : 'slug', value).maybeSingle();
   if (error) throw error;
