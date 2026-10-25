@@ -2,6 +2,24 @@ export const IDEAL_COVER_WIDTH = 1200;
 export const IDEAL_COVER_HEIGHT = 675; // Proporção 16:9 ideal para o 1º quadro (460x258px @ ~2.6x Retina)
 
 /**
+ * Converte uma Data URL (base64) em Blob diretamente em memória sem usar fetch()
+ * (evita qualquer bloqueio de CSP connect-src para data: URLs).
+ */
+export function dataUrlToBlob(dataUrl: string): Blob {
+  const parts = dataUrl.split(',');
+  const header = parts[0] || '';
+  const base64 = parts[1] || '';
+  const mimeMatch = header.match(/data:([^;]+);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: mime });
+}
+
+/**
  * Redimensiona e faz recorte central inteligente (Smart Center-Crop 16:9 - 1200x675px)
  * via HTML5 Canvas para que qualquer foto enviada encaixe perfeitamente no 1º quadro.
  */
@@ -62,4 +80,16 @@ export function cropAndResizeCoverImage(
     };
     reader.readAsDataURL(file);
   });
+}
+
+/**
+ * Redimensiona (Smart Center-Crop 1200x675px) e retorna diretamente um Blob pronto para upload.
+ */
+export async function cropAndResizeCoverImageToBlob(
+  file: File,
+  targetWidth = IDEAL_COVER_WIDTH,
+  targetHeight = IDEAL_COVER_HEIGHT
+): Promise<Blob> {
+  const dataUrl = await cropAndResizeCoverImage(file, targetWidth, targetHeight);
+  return dataUrlToBlob(dataUrl);
 }

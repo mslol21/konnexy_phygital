@@ -6,7 +6,7 @@ const cspDirectives = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https://*.supabase.co https://*.googleapis.com https://*.gstatic.com https://vercel.com",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://*.googleapis.com https://search.google.com https://*.upstash.io https://vercel.live wss://ws-us3.pusher.com",
+  "connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://*.googleapis.com https://search.google.com https://*.upstash.io https://vercel.live wss://ws-us3.pusher.com",
   "frame-src 'self' https://vercel.live",
   "frame-ancestors 'none'",
   "base-uri 'self'",

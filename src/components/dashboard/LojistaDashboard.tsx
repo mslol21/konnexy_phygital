@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { PhygitalExporter } from '@/components/dashboard/PhygitalExporter';
 import { saveTenant, uploadTenantImage, type TenantFullRecord, type TenantMap } from '@/lib/managed-client';
-import { cropAndResizeCoverImage, IDEAL_COVER_WIDTH, IDEAL_COVER_HEIGHT } from '@/lib/images';
+import { cropAndResizeCoverImageToBlob, IDEAL_COVER_WIDTH, IDEAL_COVER_HEIGHT } from '@/lib/images';
 import { PLAN_LIMITS } from '@/lib/auth/rbac';
 import {
   LayoutGrid,
@@ -146,8 +146,7 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
     setSaving(true);
     try {
       if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 4_000_000) throw new Error('Use JPG, PNG ou WebP de até 4 MB.');
-      const dataUrl = await cropAndResizeCoverImage(file);
-      const blob = await (await fetch(dataUrl)).blob();
+      const blob = await cropAndResizeCoverImageToBlob(file);
       const url = await uploadTenantImage(tenantProfile.id, blob);
       await persistCurrentProfile({ ...tenantProfile, cover_url: url }, modules);
       toast.success('Capa salva e publicada.');
