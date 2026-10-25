@@ -6,15 +6,11 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import { env } from '@/lib/env';
 import {
-  LoginCredentialsSchema,
   ForgotPasswordSchema,
   UpdatePasswordSchema
 } from '@/lib/schemas/auth';
-import {
-  logSecurityAudit,
-  computeRoleSignature
-} from '@/lib/security/audit-logger';
-import type { UserRole } from '@/types/phygital';
+import { signIn } from '@/lib/auth/sign-in';
+import { checkRateLimit, AUTH_LOGIN_RATE_LIMIT } from '@/lib/security/rate-limiter';
 
 export interface AuthActionResult {
   success: boolean;
@@ -32,111 +28,15 @@ const GENERIC_AUTH_ERROR = 'E-mail ou senha incorretos.';
  * - Sessão gerenciada via cookies HttpOnly + redirecionamento por RBAC (/admin ou /dashboard)
  */
 export async function login(formData: FormData): Promise<AuthActionResult> {
-  const rawPayload = {
-    email: String(formData.get('email') || ''),
-    password: String(formData.get('password') || ''),
-    role: (formData.get('role') as UserRole) || undefined
-  };
-
-  const parsed = LoginCredentialsSchema.safeParse(rawPayload);
-  if (!parsed.success) {
-    return {
-      success: false,
-      message: 'Verifique os requisitos de e-mail e política de senha.',
-      fieldErrors: parsed.error.flatten().fieldErrors
-    };
-  }
-
-  const { email, password, role: requestedDemoRole } = parsed.data;
   const headerStore = await headers();
-  const clientIp =
-    headerStore.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
-
-  let resolvedRole: UserRole =
-    requestedDemoRole ||
-    (email.startsWith('ceo@') || email.startsWith('admin@')
-      ? 'super_admin'
-      : 'tenant_admin');
-
-  const isLiveSupabase =
-    !env.NEXT_PUBLIC_SUPABASE_URL.includes('sandbox-project.supabase.co');
-
-  if (isLiveSupabase) {
-    try {
-      const supabase = await createClient();
-      const { data: authData, error: authError } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-
-      if (authError || !authData.user) {
-        logSecurityAudit({
-          action: 'AUTH_LOGIN_RATE_LIMITED',
-          actorRole: 'unauthenticated',
-          clientIp,
-          path: '/login',
-          severity: 'WARN',
-          metadata: { reason: 'INVALID_CREDENTIALS_GENERIC' }
-        });
-
-        // Prevenção estrita de User Enumeration: jamais revela se o e-mail existe ou não
-        return {
-          success: false,
-          message: GENERIC_AUTH_ERROR
-        };
-      }
-
-      // Consulta o papel RBAC na tabela public.profiles sem vazar erros internos
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', authData.user.id)
-        .single();
-
-      if (profile?.role === 'super_admin' || profile?.role === 'tenant_admin') {
-        resolvedRole = profile.role;
-      }
-    } catch {
-      return {
-        success: false,
-        message: GENERIC_AUTH_ERROR
-      };
-    }
-  }
-
-  // Emite cookies de sessão HttpOnly assinados com HMAC
-  const cookieStore = await cookies();
-  const signature = computeRoleSignature(resolvedRole, env.SESSION_HMAC_SECRET);
-
-  cookieStore.set('konnexy_role', resolvedRole, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 // 24 horas
-  });
-
-  cookieStore.set('konnexy_sig', signature, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24
-  });
-
-  logSecurityAudit({
-    action: 'AUTH_LOGIN_SUCCESS',
-    actorRole: resolvedRole,
-    clientIp,
-    path: '/login',
-    severity: 'INFO'
-  });
-
-  const targetDestination =
-    resolvedRole === 'super_admin' ? '/admin' : '/dashboard';
-
-  redirect(targetDestination);
+  const limit = await checkRateLimit(headerStore.get('x-real-ip') || 'unknown', AUTH_LOGIN_RATE_LIMIT);
+  if (!limit.allowed) return { success: false, message: AUTH_LOGIN_RATE_LIMIT.errorMessage };
+  let destination: string;
+  try {
+    const result = await signIn({ email: formData.get('email'), password: formData.get('password') });
+    destination = result.redirectTo;
+  } catch { return { success: false, message: GENERIC_AUTH_ERROR }; }
+  redirect(destination);
 }
 
 /**
@@ -147,8 +47,7 @@ export async function login(formData: FormData): Promise<AuthActionResult> {
  */
 export async function logout(): Promise<void> {
   try {
-    const isLiveSupabase =
-      !env.NEXT_PUBLIC_SUPABASE_URL.includes('sandbox-project.supabase.co');
+    const isLiveSupabase = Boolean(env.NEXT_PUBLIC_SUPABASE_URL);
     if (isLiveSupabase) {
       const supabase = await createClient();
       await supabase.auth.signOut();
@@ -200,16 +99,18 @@ export async function requestPasswordReset(
   }
 
   const { email } = parsed.data;
-  const isLiveSupabase =
-    !env.NEXT_PUBLIC_SUPABASE_URL.includes('sandbox-project.supabase.co');
+  const isLiveSupabase = Boolean(env.NEXT_PUBLIC_SUPABASE_URL);
+  if (!isLiveSupabase) return { success: false, message: 'Serviço temporariamente indisponível.' };
 
   if (isLiveSupabase) {
     try {
       const supabase = await createClient();
-      await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${env.NEXT_PUBLIC_APP_URL}/reset-password`
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/reset-password`
       });
+      if (error) return { success: false, message: 'Não foi possível solicitar a recuperação agora.' };
     } catch {
+      return { success: false, message: 'Serviço temporariamente indisponível.' };
       // Silencia erros de conta inexistente para prevenir User Enumeration
     }
   }
@@ -243,8 +144,8 @@ export async function updatePassword(
     };
   }
 
-  const isLiveSupabase =
-    !env.NEXT_PUBLIC_SUPABASE_URL.includes('sandbox-project.supabase.co');
+  const isLiveSupabase = Boolean(env.NEXT_PUBLIC_SUPABASE_URL);
+  if (!isLiveSupabase) return { success: false, message: 'Serviço temporariamente indisponível.' };
 
   if (isLiveSupabase) {
     try {

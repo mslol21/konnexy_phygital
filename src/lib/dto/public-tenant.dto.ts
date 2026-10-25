@@ -5,7 +5,7 @@ import type { Tenant, TenantModule, TenantStatus } from '@/types/phygital';
  * Jamais seleciona owner_id, owner_email, owner_phone, mrr_cents, next_billing_date ou notas internas.
  */
 export const PUBLIC_TENANT_SELECT_COLUMNS =
-  'id, slug, name, nicho, bio, logo_url, cover_url, primary_color, google_place_id, status, created_at' as const;
+  'id, slug, name, nicho, bio, logo_url, cover_url, primary_color, google_place_id, whatsapp_feedback, status, created_at' as const;
 
 /**
  * Data Transfer Object (DTO) Estrito para a Micro-Página Pública (/r/[slug]) e API pública.
@@ -61,7 +61,7 @@ export function toPublicTenantDTO(raw: Partial<Tenant> & { slug: string; name: s
       : '#0F172A',
     google_place_id: raw.google_place_id ? String(raw.google_place_id) : null,
     status: (raw.status as TenantStatus) || 'active',
-    // Mantém apenas dígitos caso configurado como canal de retenção de notas 1-3★
+    // Telefone comercial público, quando configurado.
     whatsapp_feedback: raw.whatsapp_feedback
       ? String(raw.whatsapp_feedback).replace(/\D/g, '')
       : null,

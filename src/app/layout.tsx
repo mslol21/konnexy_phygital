@@ -16,8 +16,8 @@ const geistMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Konnexy Tag | Design System Phygital SaaS Multi-Tenant',
-  description: 'Placas Inteligentes NFC & QR Code com Avaliação Google via IA e Micro-Landing Page'
+  title: 'Konnexy Tag | Seu negócio a um toque',
+  description: 'Placas NFC e QR Code para conectar seus clientes às avaliações, WhatsApp e serviços do seu negócio.'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -41,7 +41,7 @@ export async function generateQrCodeSvg(options: QrCodeGeneratorOptions): Promis
   return QRCode.toString(url, {
     type: 'svg',
     errorCorrectionLevel: 'H', // 30% de tolerância a falhas físicas, riscos no acrílico ou logo central
-    margin: Math.max(2, quietZoneModules),
+    margin: Math.max(4, quietZoneModules),
     color: {
       dark: darkColor,
       light: lightColor
@@ -185,7 +185,7 @@ export async function generateQrCodeHighResPngDataUrl(
     await QRCode.toCanvas(canvas, url, {
       errorCorrectionLevel: 'H',
       width: safeWidth,
-      margin: Math.max(2, quietZoneModules),
+      margin: Math.max(4, quietZoneModules),
       color: { dark: darkColor, light: lightColor }
     });
 
@@ -311,7 +311,7 @@ export async function generateQrCodeHighResPngDataUrl(
   await QRCode.toCanvas(qrCanvas, url, {
     errorCorrectionLevel: 'H',
     width: qrRenderSize,
-    margin: Math.max(2, quietZoneModules),
+    margin: Math.max(4, quietZoneModules),
     color: {
       dark: darkColor,
       light: '#FFFFFF'

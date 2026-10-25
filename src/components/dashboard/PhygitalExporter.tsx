@@ -1,5 +1,6 @@
 'use client';
 
+import { physicalLinks } from '@/lib/physical-links';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -24,6 +25,7 @@ import { Backlight } from '@/components/magicui/backlight';
 import { RainbowButton } from '@/components/magicui/rainbow-button';
 
 interface PhygitalExporterProps {
+  tenantId: string;
   slug: string;
   tenantName: string;
   nicho?: string;
@@ -33,12 +35,13 @@ interface PhygitalExporterProps {
 }
 
 export function PhygitalExporter({
+  tenantId,
   slug,
   tenantName,
   nicho = 'Estabelecimento Verificado',
   primaryColor = '#0F172A',
   logoUrl,
-  baseUrl = 'https://konnexy.app'
+  baseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
 }: PhygitalExporterProps) {
   const [includeAcrylicFrame, setIncludeAcrylicFrame] = useState(true);
   const [quietZoneModules, setQuietZoneModules] = useState(4);
@@ -46,11 +49,13 @@ export function PhygitalExporter({
   const [isExporting, setIsExporting] = useState(false);
   const [previewSvg, setPreviewSvg] = useState<string>('');
 
-  const nfcUrl = `${baseUrl}/r/${slug}?src=nfc`;
-  const qrUrl = `${baseUrl}/r/${slug}?src=qr`;
+  const links = physicalLinks(baseUrl, tenantId);
+  const nfcUrl = links?.nfc || '';
+  const qrUrl = links?.qr || '';
 
   // Atualiza o Preview Vetorial em Tempo Real sempre que o slug, cor ou quietZone mudam
   useEffect(() => {
+    if (!qrUrl) return;
     let active = true;
     generateQrCodeSvg({
       url: qrUrl,
@@ -68,7 +73,7 @@ export function PhygitalExporter({
   }, [qrUrl, primaryColor, quietZoneModules]);
 
   const copyLink = async (url: string, type: 'nfc' | 'qr') => {
-    await navigator.clipboard.writeText(url);
+    try { await navigator.clipboard.writeText(url); } catch { toast.error('Não foi possível copiar o link.'); return; }
     setCopiedType(type);
     toast.success(
       type === 'nfc'
@@ -80,6 +85,7 @@ export function PhygitalExporter({
   };
 
   const handleWriteNfcTag = async () => {
+    if (!nfcUrl) return;
     if (!('NDEFReader' in window)) {
       toast.info('Web NFC requer Chrome no Android', {
         description:
@@ -94,11 +100,9 @@ export function PhygitalExporter({
       });
       // @ts-expect-error Web NFC experimental typing
       const ndef = new window.NDEFReader();
-      await ndef.write({
-        records: [{ recordType: 'url', data: nfcUrl }]
-      });
+      await ndef.write({ records: [{ recordType: 'url', data: nfcUrl }] }, { overwrite: false, signal: AbortSignal.timeout(45000) });
       toast.success('Chip NFC gravado com sucesso!', {
-        description: 'Placa física pronta para uso imediato no balcão.'
+        description: 'Gravação concluída. Leia a tag e confira o destino antes de entregar.'
       });
     } catch (err: any) {
       toast.error('Falha ao gravar chip NFC', {
@@ -135,6 +139,8 @@ export function PhygitalExporter({
       toast.success('Vetor SVG da Placa Acrílica (Nível H) exportado!', {
         description: 'Visual idêntico ao preview da esquerda, pronto para Corte Laser e Impressão UV.'
       });
+    } catch {
+      toast.error('Não foi possível exportar. Tente novamente.');
     } finally {
       setIsExporting(false);
     }
@@ -166,10 +172,14 @@ export function PhygitalExporter({
       toast.success('PNG de Alta Resolução (300 DPI) baixado!', {
         description: 'Resolução de 2400px com 30% de tolerância a falhas (ECC Level H).'
       });
+    } catch {
+      toast.error('Não foi possível exportar. Tente novamente.');
     } finally {
       setIsExporting(false);
     }
   };
+
+  if (!links) return <div role="alert" className="rounded-2xl border border-amber-500/40 p-6 text-amber-600">A produção das placas está indisponível até configurar o domínio público permanente em NEXT_PUBLIC_APP_URL. Nenhum QR Code será gerado com endereço provisório.</div>;
 
   return (
     <div className="rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-sm">
@@ -271,7 +281,7 @@ export function PhygitalExporter({
                   <span>★</span>
                 </div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                  Avalie em 10 segundos no Google
+                  Compartilhe sua experiência no Google
                 </p>
               </div>
 
@@ -359,7 +369,7 @@ export function PhygitalExporter({
                   onChange={(e) => setQuietZoneModules(Number(e.target.value))}
                   className="bg-transparent font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none"
                 >
-                  <option value={2}>2 módulos (Compacto)</option>
+
                   <option value={4}>4 módulos (Padrão ISO)</option>
                   <option value={6}>6 módulos (Margem Larga)</option>
                 </select>

@@ -60,6 +60,7 @@ for (const filePath of files) {
   const content = fs.readFileSync(filePath, 'utf8');
 
   for (const rule of SAST_RULES) {
+    rule.pattern.lastIndex = 0;
     if (rule.pattern.test(content)) {
       console.error(`❌ [${rule.severity}] ${rule.id} (${rule.name}) em: ${relPath}`);
       violations += 1;
@@ -82,13 +83,9 @@ for (const filePath of files) {
 }
 
 console.log(`✔ Arquivos auditados em src/: ${files.length}`);
-console.log(`✔ Checagem estrita de tipos TypeScript (tsc --noEmit): OK (0 erros)`);
-console.log(`✔ Isolamento de segredos 'server-only' em Client Components: OK`);
-console.log(`✔ Regras SAST (Anti-Eval, Anti-Prototype-Pollution, Anti-Hardcoded-Keys): OK\n`);
-
 if (violations > 0) {
   console.error(`❌ FALHA SAST: ${violations} violação(ões) de segurança encontrada(s)!`);
   process.exit(1);
 } else {
-  console.log('✅ SUCESSO SAST: 0 vulnerabilidades estáticas ou erros de tipagem encontrados.');
+  console.log('✅ SUCESSO SAST: Nenhuma ocorrência das regras verificadas. Esta checagem limitada não comprova ausência de vulnerabilidades.');
 }

@@ -1,115 +1,14 @@
 import Link from 'next/link';
-import { Nfc, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Nfc, MessageCircle, QrCode, ArrowRight, Check } from 'lucide-react';
 import { WarpBackground } from '@/components/magicui/warp-background';
 import { NeonGradientCard } from '@/components/magicui/neon-gradient-card';
-import { RainbowButton } from '@/components/magicui/rainbow-button';
-import { Backlight } from '@/components/magicui/backlight';
-
 export default function HomePage() {
-  return (
-    <div className="min-h-screen bg-zinc-950 text-white flex flex-col justify-center items-center px-4 py-10">
-      <WarpBackground
-        perspective={160}
-        beamsPerSide={4}
-        beamSize={5}
-        gridColor="rgba(245, 158, 11, 0.14)"
-        className="w-full max-w-5xl bg-zinc-950/90 px-6 py-12 sm:px-12 sm:py-16 shadow-2xl"
-      >
-        <div className="max-w-3xl mx-auto text-center space-y-6">
-          <div className="flex justify-center">
-            <Backlight
-              blur={24}
-              glowColor="rgba(245, 158, 11, 0.55)"
-              secondaryGlowColor="rgba(99, 102, 241, 0.45)"
-              className="w-auto"
-            >
-              <img
-                src="/logos/konnexy-logo.svg"
-                alt="Konnexy Tag Logo"
-                className="h-16 w-16 rounded-2xl shadow-lg"
-              />
-            </Backlight>
-          </div>
-
-          <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-xs font-semibold text-amber-300">
-            <Sparkles className="h-3.5 w-3.5" /> SaaS Phygital Multi-Tenant (NFC + QR Code + IA)
-          </span>
-
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-b from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent">
-            Konnexy Tag • Arquitetura Phygital
-          </h1>
-
-          <p className="text-zinc-400 text-base sm:text-lg max-w-2xl mx-auto">
-            Transforme aproximações no balcão em avaliações 5 estrelas no Google com IA e ative módulos de receita recorrente em menos de 1 segundo.
-          </p>
-
-          <div className="flex flex-wrap justify-center items-center gap-4 pt-4">
-            <Link href="/r/barbearia-premium?src=nfc">
-              <RainbowButton size="lg">
-                <Nfc className="h-4 w-4 text-amber-400" />
-                Testar Placa Pública (/r/barbearia-premium)
-              </RainbowButton>
-            </Link>
-
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition"
-            >
-              Painel do Lojista (/dashboard)
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-
-            <Link
-              href="/super-admin"
-              className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-6 py-3 text-sm font-bold text-amber-300 hover:bg-amber-500/20 transition"
-            >
-              <ShieldCheck className="h-4 w-4 text-amber-400" />
-              Super Admin (/super-admin)
-            </Link>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-4 pt-8 text-left">
-            <NeonGradientCard
-              borderSize={1.5}
-              borderRadius={20}
-              neonColors={{ firstColor: '#6366f1', secondColor: '#06b6d4' }}
-              innerClassName="p-5 bg-zinc-900/95"
-            >
-              <Nfc className="h-5 w-5 text-indigo-400 mb-2" />
-              <h3 className="text-sm font-bold text-white">Hardware NFC & QR 300 DPI</h3>
-              <p className="text-xs text-zinc-400 mt-1">
-                Gravação Web NFC para NTAG213/215 e exportação PNG/SVG pronta para placas acrílicas.
-              </p>
-            </NeonGradientCard>
-
-            <NeonGradientCard
-              borderSize={1.5}
-              borderRadius={20}
-              neonColors={{ firstColor: '#f59e0b', secondColor: '#ec4899' }}
-              innerClassName="p-5 bg-zinc-900/95"
-            >
-              <Sparkles className="h-5 w-5 text-amber-400 mb-2" />
-              <h3 className="text-sm font-bold text-white">Google Reviews com Gemini</h3>
-              <p className="text-xs text-zinc-400 mt-1">
-                3 opções de resenhas otimizadas para SEO Local ao tocar em tags de elogios.
-              </p>
-            </NeonGradientCard>
-
-            <NeonGradientCard
-              borderSize={1.5}
-              borderRadius={20}
-              neonColors={{ firstColor: '#10b981', secondColor: '#3b82f6' }}
-              innerClassName="p-5 bg-zinc-900/95"
-            >
-              <ShieldCheck className="h-5 w-5 text-emerald-400 mb-2" />
-              <h3 className="text-sm font-bold text-white">Blindagem de Notas 1-3★</h3>
-              <p className="text-xs text-zinc-400 mt-1">
-                Retém insatisfações em formulário privado e dispara alerta no WhatsApp do gerente.
-              </p>
-            </NeonGradientCard>
-          </div>
-        </div>
-      </WarpBackground>
-    </div>
-  );
+  const phone=(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '').replace(/\D/g,'');
+  const contact=phone?`https://wa.me/${phone}?text=${encodeURIComponent('Olá! Quero saber mais sobre a placa Konnexy Tag para meu negócio.')}`:null;
+  return <main className="min-h-screen bg-zinc-950 text-white px-5 py-8"><div className="mx-auto max-w-5xl">
+    <nav className="flex items-center justify-between mb-10"><Link href="/" className="flex items-center gap-3 font-bold"><img src="/logos/konnexy-logo.svg" alt="" className="h-10 w-10"/>Konnexy Tag</Link><Link href="/login" className="rounded-full border border-zinc-700 px-5 py-2 text-sm">Área do cliente</Link></nav>
+    <WarpBackground beamsPerSide={3} className="rounded-3xl bg-zinc-950 px-6 py-14 sm:p-16"><div className="relative max-w-3xl"><span className="text-amber-400 text-sm font-semibold">Seu balcão conectado ao celular do cliente</span><h1 className="mt-5 text-4xl sm:text-6xl font-bold tracking-tight leading-tight">Um toque para aproximar seu cliente do seu negócio.</h1><p className="mt-6 max-w-xl text-lg text-zinc-300">Com uma placa NFC e QR Code, seus clientes acessam avaliações no Google, WhatsApp e os serviços do seu estabelecimento em uma página personalizada.</p><div className="mt-8 flex flex-wrap gap-4">{contact && <a href={contact} className="flex items-center gap-2 rounded-xl bg-amber-400 text-zinc-950 px-6 py-4 font-bold">Quero minha placa<ArrowRight size={18}/></a>}<Link href="/r/barbearia-premium" className="rounded-xl border border-zinc-600 px-6 py-4 font-semibold">Ver exemplo fictício</Link><a href="#como-funciona" className="rounded-xl border border-zinc-600 px-6 py-4 font-semibold">Veja como funciona</a></div></div></WarpBackground>
+    <section id="como-funciona" className="py-16"><h2 className="text-3xl font-bold mb-8">Simples para você. Fácil para o cliente.</h2><div className="grid gap-5 md:grid-cols-3">{[{icon:Nfc,title:'Aproxime ou escaneie',text:'O cliente aproxima um celular compatível ou lê o QR Code pela câmera.'},{icon:QrCode,title:'Abra a página da empresa',text:'Uma página com sua marca e os atalhos que fazem sentido para seu atendimento.'},{icon:MessageCircle,title:'Escolha o próximo passo',text:'Avaliar no Google, falar no WhatsApp, consultar o catálogo ou acessar outros serviços.'}].map(({icon:Icon,title,text})=><NeonGradientCard key={title} innerClassName="h-full p-6 bg-zinc-900"><Icon className="text-amber-400 mb-4"/><h3 className="font-bold text-lg">{title}</h3><p className="mt-3 text-sm text-zinc-400 leading-relaxed">{text}</p></NeonGradientCard>)}</div></section>
+    <section className="rounded-3xl border border-zinc-800 bg-zinc-900 p-8 mb-12"><h2 className="text-2xl font-bold">Uma presença digital que acompanha seu atendimento</h2><div className="grid sm:grid-cols-2 gap-4 mt-6">{['Página com a identidade do seu negócio','Links atualizáveis sem reimprimir a placa','Painel para gerenciar informações e módulos','Acompanhamento dos acessos e cliques'].map(item=><p key={item} className="flex gap-3 text-zinc-300"><Check className="shrink-0 text-emerald-400" size={20}/>{item}</p>)}</div><p className="mt-6 text-sm text-zinc-400">As avaliações são espontâneas. A placa facilita o acesso, sem prometer notas ou resultados específicos.</p></section><footer className="border-t border-zinc-800 py-6 text-sm text-zinc-500">Konnexy Tag · NFC + QR Code</footer>
+  </div></main>;
 }
