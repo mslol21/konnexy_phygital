@@ -1,11 +1,19 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Sun, Moon, ExternalLink, Copy, MessageCircle, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { NeonGradientCard } from '@/components/magicui/neon-gradient-card';
-import { BrandCardBackground, GoogleGLogo } from '@/components/public/BrandCardBackground';
-import { BentoModulesGrid } from '@/components/public/BentoModuleCards';
+import { GoogleGLogo, GoogleReviewBackground } from '@/components/public/GoogleReviewBrand';
+
+const BentoModulesGrid = dynamic(
+  () => import('@/components/public/BentoModuleCards').then((mod) => mod.BentoModulesGrid),
+  {
+    ssr: false,
+    loading: () => <div className="h-24 animate-pulse rounded-2xl bg-zinc-200/70 dark:bg-zinc-900/70" />
+  }
+);
 import { trackEvent } from '@/lib/telemetry';
 import type { Tenant, TenantModule, AccessSource } from '@/types/phygital';
 
@@ -158,7 +166,7 @@ export function MicroPageClient({
                 neonColors={{ firstColor: '#4285F4', secondColor: '#EA4335' }}
                 innerClassName="relative overflow-hidden p-6 bg-white/95 dark:bg-zinc-900/95"
               >
-                <BrandCardBackground brand="google" size={160} opacity={0.18} />
+                <GoogleReviewBackground size={160} opacity={0.18} />
 
                 <div style={{ position: 'relative', zIndex: 2 }} className="space-y-4">
                   <div className="flex items-center gap-2">
