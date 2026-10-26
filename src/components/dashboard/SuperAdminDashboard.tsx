@@ -4,7 +4,19 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { PhygitalExporter } from '@/components/dashboard/PhygitalExporter';
+import dynamic from 'next/dynamic';
+
+const PhygitalExporter = dynamic(
+  () => import('@/components/dashboard/PhygitalExporter').then((mod) => mod.PhygitalExporter),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 p-6 text-sm text-zinc-500 dark:text-zinc-400">
+        Carregando estúdio de QR Code e NFC…
+      </div>
+    )
+  }
+);
 import { PLAN_LIMITS, formatCurrencyBRL } from '@/lib/auth/rbac';
 import { saveTenant, createTenant, type TenantFullRecord, type TenantMap } from '@/lib/managed-client';
 import {
