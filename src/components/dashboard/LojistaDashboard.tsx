@@ -5,7 +5,19 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { PhygitalExporter } from '@/components/dashboard/PhygitalExporter';
+import dynamic from 'next/dynamic';
+
+const PhygitalExporter = dynamic(
+  () => import('@/components/dashboard/PhygitalExporter').then((mod) => mod.PhygitalExporter),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 p-6 text-sm text-zinc-500 dark:text-zinc-400">
+        Carregando estúdio de QR Code e NFC…
+      </div>
+    )
+  }
+);
 import { saveTenant, uploadTenantImage, type TenantFullRecord, type TenantMap } from '@/lib/managed-client';
 import { cropAndResizeCoverImageToBlob, IDEAL_COVER_WIDTH, IDEAL_COVER_HEIGHT } from '@/lib/images';
 import { PLAN_LIMITS } from '@/lib/auth/rbac';
