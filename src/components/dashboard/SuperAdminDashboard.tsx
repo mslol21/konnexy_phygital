@@ -175,7 +175,7 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
   });
 
   return (
-    <fieldset disabled={saving} className="min-h-screen bg-zinc-950 text-zinc-100 p-3 sm:p-6 lg:p-8 pb-28 md:pb-12">
+    <fieldset disabled={saving} className="min-w-0 min-h-screen bg-zinc-950 text-zinc-100 p-3 sm:p-6 lg:p-8 pb-28 md:pb-12">
       <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8">
         {/* TOPBAR DO SUPER ADMIN */}
         <header className="flex flex-col justify-between gap-4 border-b border-zinc-800/80 pb-6 sm:flex-row sm:items-center">

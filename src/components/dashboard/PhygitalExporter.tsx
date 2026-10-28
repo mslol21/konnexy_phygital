@@ -182,11 +182,11 @@ export function PhygitalExporter({
   if (!links) return <div role="alert" className="rounded-2xl border border-amber-500/40 p-6 text-amber-600">A produção das placas está indisponível até configurar o domínio público permanente em NEXT_PUBLIC_APP_URL. Nenhum QR Code será gerado com endereço provisório.</div>;
 
   return (
-    <div className="rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 p-4 sm:p-6 lg:p-8 shadow-sm">
+    <div className="min-w-0 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 p-4 sm:p-6 lg:p-8 shadow-sm">
       <div className="flex flex-col justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800/80 pb-6 sm:flex-row sm:items-center">
-        <div>
+        <div className="min-w-0">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 px-3 py-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-            <Layers className="h-3.5 w-3.5 text-amber-500" /> QR Code & NFC Hardware Studio
+            <Layers className="h-3.5 w-3.5 shrink-0 text-amber-500" /> QR Code & NFC Hardware Studio
           </div>
           <h3 className="mt-2 text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
             Estúdio de Identidade Física (Placa em Acrílico)
@@ -197,25 +197,25 @@ export function PhygitalExporter({
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-          <ShieldCheck className="h-4 w-4 text-emerald-500" />
+          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
           ECC Level H • 300 DPI Ready
         </div>
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-12 items-center">
+      <div className="mt-8 grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-12 items-center">
         {/* ===================================================================
          * COLUNA ESQUERDA: MOCKUP REALISTA DA PLACA EM ACRÍLICO (5 COLUNAS)
          * =================================================================== */}
-        <div className="lg:col-span-5 flex flex-col items-center">
+        <div className="min-w-0 lg:col-span-5 flex flex-col items-center">
           <Backlight
             blur={28}
             glowColor={primaryColor}
-            className="w-auto"
+            className="w-full min-w-0 max-w-[280px] sm:max-w-[320px] [&>div:last-child]:w-full [&>div:last-child]:min-w-0"
           >
             {/* Placa física de Acrílico Cristal */}
             <motion.div
               whileHover={{ y: -4 }}
-              className="relative w-full max-w-[280px] sm:max-w-[320px] rounded-[32px] border-2 border-white/40 dark:border-white/15 bg-gradient-to-b from-white via-zinc-50 to-zinc-100 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-950 p-5 sm:p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] overflow-hidden"
+              className="relative w-full min-w-0 rounded-[32px] border-2 border-white/40 dark:border-white/15 bg-gradient-to-b from-white via-zinc-50 to-zinc-100 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-950 p-5 sm:p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] overflow-hidden"
             >
               {/* Reflexo diagonal de superfície acrílica */}
               <div
@@ -224,12 +224,12 @@ export function PhygitalExporter({
               />
 
               {/* Topo da Placa: Badge NFC Contactless */}
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
                   KONNEXY TAG
                 </span>
                 <div className="flex items-center gap-1 rounded-full bg-zinc-900/5 dark:bg-white/10 px-2.5 py-1 text-[10px] font-bold text-zinc-700 dark:text-zinc-200">
-                  <Nfc className="h-3.5 w-3.5" style={{ color: primaryColor }} />
+                  <Nfc className="h-3.5 w-3.5 shrink-0" style={{ color: primaryColor }} />
                   NFC ATIVO
                 </div>
               </div>
@@ -246,7 +246,7 @@ export function PhygitalExporter({
 
               {/* Container do QR Code Vetorial com Logo Central */}
               <div
-                className="relative mx-auto mt-4 flex h-44 w-44 sm:h-52 sm:w-52 items-center justify-center rounded-2xl bg-white p-2.5 sm:p-3 shadow-inner border-2"
+                className="relative mx-auto mt-4 flex aspect-square w-full max-w-44 sm:max-w-52 items-center justify-center rounded-2xl bg-white p-2.5 sm:p-3 shadow-inner border-2"
                 style={{ borderColor: `${primaryColor}35` }}
               >
                 {previewSvg ? (
@@ -292,7 +292,7 @@ export function PhygitalExporter({
               />
             </motion.div>
           </Backlight>
-          <span className="mt-3 text-[11px] font-medium text-zinc-400">
+          <span className="mt-3 text-center text-[11px] font-medium text-zinc-400">
             Preview em tempo real da peça acrílica (10x15cm)
           </span>
         </div>
@@ -300,12 +300,12 @@ export function PhygitalExporter({
         {/* ===================================================================
          * COLUNA DIREITA: CONTROLES DE GRAVAÇÃO NFC E EXPORTAÇÃO GRÁFICA (7 COLUNAS)
          * =================================================================== */}
-        <div className="lg:col-span-7 space-y-5">
+        <div className="min-w-0 lg:col-span-7 space-y-5">
           {/* Bloco 1: Identificador NFC */}
           <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/60 p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">
-                <Nfc className="h-4 w-4 text-indigo-500" /> Link Imutável para Chip NFC (NTAG213 / 215)
+                <Nfc className="h-4 w-4 shrink-0 text-indigo-500" /> Link Imutável para Chip NFC (NTAG213 / 215)
               </span>
               <span className="rounded-md bg-indigo-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">
                 URI Record
@@ -313,7 +313,7 @@ export function PhygitalExporter({
             </div>
 
             <div className="mt-2.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <code className="flex-1 truncate rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs font-mono text-zinc-800 dark:text-zinc-200">
+              <code className="min-w-0 flex-1 whitespace-normal break-all rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs font-mono text-zinc-800 dark:text-zinc-200">
                 {nfcUrl}
               </code>
               <button
@@ -321,7 +321,7 @@ export function PhygitalExporter({
                 onClick={() => copyLink(nfcUrl, 'nfc')}
                 className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 px-3.5 py-2 text-xs font-bold text-white dark:text-zinc-900 hover:opacity-90 transition shrink-0"
               >
-                {copiedType === 'nfc' ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                {copiedType === 'nfc' ? <Check className="h-3.5 w-3.5 shrink-0" /> : <Copy className="h-3.5 w-3.5 shrink-0" />}
                 {copiedType === 'nfc' ? 'Copiado' : 'Copiar'}
               </button>
             </div>
@@ -331,16 +331,16 @@ export function PhygitalExporter({
               onClick={handleWriteNfcTag}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
             >
-              <Smartphone className="h-4 w-4 text-indigo-500" />
-              Gravar Chip NFC Direto pelo Navegador (Web NFC API)
+              <Smartphone className="h-4 w-4 shrink-0 text-indigo-500" />
+              <span className="min-w-0">Gravar Chip NFC Direto pelo Navegador (Web NFC API)</span>
             </button>
           </div>
 
           {/* Bloco 2: Parâmetros Ópticos do QR Code */}
           <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/60 p-4 space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">
-                <QrCode className="h-4 w-4 text-emerald-500" /> Parâmetros de Impressão Gráfica
+                <QrCode className="h-4 w-4 shrink-0 text-emerald-500" /> Parâmetros de Impressão Gráfica
               </span>
               <button
                 type="button"
@@ -351,23 +351,24 @@ export function PhygitalExporter({
               </button>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-3 pt-1">
+            <div className="grid min-w-0 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3 pt-1">
               <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 text-xs font-medium text-zinc-700 dark:text-zinc-200">
                 <input
                   type="checkbox"
                   checked={includeAcrylicFrame}
                   onChange={(e) => setIncludeAcrylicFrame(e.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                  className="h-4 w-4 shrink-0 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
                 />
                 <span>Moldura de Corte Acrílico (300 DPI)</span>
               </label>
 
-              <div className="flex items-center justify-between rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs">
-                <span className="font-medium text-zinc-600 dark:text-zinc-400">Quiet Zone:</span>
+              <div className="flex min-w-0 flex-col items-stretch justify-center gap-1.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs">
+                <label htmlFor="plate-quiet-zone" className="font-medium text-zinc-600 dark:text-zinc-400">Quiet Zone:</label>
                 <select
+                  id="plate-quiet-zone"
                   value={quietZoneModules}
                   onChange={(e) => setQuietZoneModules(Number(e.target.value))}
-                  className="bg-transparent font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none"
+                  className="w-full min-w-0 max-w-full bg-transparent py-1 font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none"
                 >
 
                   <option value={4}>4 módulos (Padrão ISO)</option>
@@ -378,15 +379,15 @@ export function PhygitalExporter({
           </div>
 
           {/* Bloco 3: Controles de Download (Primário SVG Vetorial + Secundário PNG 300 DPI) */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+          <div className="flex min-w-0 flex-col items-stretch gap-3 pt-1">
             <RainbowButton
               type="button"
               disabled={isExporting}
               onClick={handleDownloadSvg}
-              className="flex-1 text-xs sm:text-sm"
+              className="w-full min-w-0 whitespace-normal px-3 py-3 text-xs sm:text-sm [&>span:last-child]:min-w-0"
             >
-              <FileCode2 className="h-4 w-4" />
-              Baixar SVG Vetorial Puro (Corte Laser / UV)
+              <FileCode2 className="h-4 w-4 shrink-0" />
+              <span className="min-w-0">Baixar SVG Vetorial Puro (Corte Laser / UV)</span>
             </RainbowButton>
 
             <motion.button
@@ -394,10 +395,10 @@ export function PhygitalExporter({
               whileTap={{ scale: 0.98 }}
               disabled={isExporting}
               onClick={handleDownloadHighResPng}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-5 py-3.5 text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition disabled:opacity-50"
+              className="w-full min-w-0 inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-5 py-3.5 text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition disabled:opacity-50"
             >
-              <Printer className="h-4 w-4" />
-              Exportar PNG 300 DPI (2400px)
+              <Printer className="h-4 w-4 shrink-0" />
+              <span className="min-w-0">Exportar PNG 300 DPI (2400px)</span>
             </motion.button>
           </div>
         </div>
