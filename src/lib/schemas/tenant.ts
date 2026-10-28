@@ -15,7 +15,7 @@ export const tenantSchema = z.object({
   whatsapp_feedback: text(20).regex(/^\+?[0-9]*$/).nullable().optional(),
   status: z.enum(['active','trial','suspended','canceled']).optional(),
   plan_tier: z.enum(['starter','pro','enterprise']).optional(),
-  owner_email: z.union([z.email(), z.literal('')]).optional(),
+  owner_email: z.union([z.string().email(), z.literal('')]).optional(),
 });
 const moduleTypes = ['google_reviews','whatsapp_direct','pix_facil','wifi_facil','cardapio_link','catalogo_produtos','social_links','site_institucional','custom_link'] as const;
 const configSchemas = {

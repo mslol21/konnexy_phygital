@@ -588,7 +588,7 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
               initial={{ y: 80, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 80, opacity: 0 }}
-              className="relative z-10 w-full max-w-[460px] rounded-t-3xl sm:rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl"
+              className="relative z-10 w-full max-w-[460px] max-h-[88vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-6 shadow-2xl"
             >
               {/* Handle bar mobile */}
               <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-zinc-300 dark:bg-zinc-700" />

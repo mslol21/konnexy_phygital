@@ -119,10 +119,10 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
           <form action={logout}>
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition"
             >
-              <LogOut className="h-3.5 w-3.5 text-rose-400" />
-              <span>Sair da conta</span>
+              <LogOut className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+              <span>Sair<span className="hidden sm:inline"> da conta</span></span>
             </button>
           </form>
         </div>

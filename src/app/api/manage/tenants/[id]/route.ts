@@ -9,7 +9,7 @@ import { PLAN_LIMITS } from '@/lib/auth/rbac';
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     assertSameOrigin(req);
-    const id = z.uuid().parse((await context.params).id);
+    const id = z.string().uuid().parse((await context.params).id);
     const { user, role, tenant: current } = await requireOwnedTenant(id);
     const input = saveTenantSchema.parse(await readJson(req));
     const plan = role === 'super_admin' ? input.tenant.plan_tier || current.plan_tier || 'starter' : current.plan_tier || 'starter';

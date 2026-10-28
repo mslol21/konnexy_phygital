@@ -4,7 +4,7 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import { getPublicTenant } from '@/lib/tenants';
 import { assertSameOrigin, readJson, apiError } from '@/lib/api';
 import { checkRateLimit, extractClientIp } from '@/lib/security/rate-limiter';
-const schema = z.object({ id: z.uuid(), tenantId: z.uuid(), source: z.enum(['nfc','qr','direct']), event: z.enum(['page_view','module_click','review_copied']), moduleType: z.enum(['google_reviews','whatsapp_direct','pix_facil','wifi_facil','cardapio_link','catalogo_produtos','social_links','site_institucional','custom_link']).optional() });
+const schema = z.object({ id: z.string().uuid(), tenantId: z.string().uuid(), source: z.enum(['nfc','qr','direct']), event: z.enum(['page_view','module_click','review_copied']), moduleType: z.enum(['google_reviews','whatsapp_direct','pix_facil','wifi_facil','cardapio_link','catalogo_produtos','social_links','site_institucional','custom_link']).optional() });
 export async function POST(req: NextRequest) {
   try {
     assertSameOrigin(req);

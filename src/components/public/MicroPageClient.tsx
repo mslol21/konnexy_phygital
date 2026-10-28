@@ -102,7 +102,7 @@ export function MicroPageClient({
 
   return (
     <div className={dark ? 'dark' : ''}>
-      <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-white px-4 py-8">
+      <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-white px-3 sm:px-4 py-6 sm:py-8">
         <main className="mx-auto max-w-[460px] space-y-5">
           {demo && (
             <aside className="rounded-xl border border-amber-500 bg-amber-100 p-4 text-sm text-amber-950">

@@ -209,7 +209,7 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
 
   return (
     <fieldset disabled={saving} className={isDark ? 'dark min-w-0' : 'min-w-0'}>
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300 p-4 sm:p-8 lg:p-10">
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300 p-3 sm:p-6 lg:p-8 pb-28 md:pb-12">
         <div className="mx-auto max-w-6xl space-y-6">
           {/* =================================================================
            * SELETOR RÁPIDO DE PERFIL (MULTI-TENANT PROFILE SWITCHER)
@@ -289,7 +289,7 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
               <Link
                 href="/super-admin"
                 className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3.5 py-2.5 text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition"
@@ -311,7 +311,7 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
                 href={`/r/${tenantProfile.slug}?src=nfc`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 dark:bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-white dark:text-zinc-950 shadow-sm hover:opacity-95 transition"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 dark:bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-white dark:text-zinc-950 shadow-sm hover:opacity-95 transition flex-1 sm:flex-initial text-center"
               >
                 Abrir Micro-Página (/r/{tenantProfile.slug})
                 <ArrowUpRight className="h-4 w-4" />
@@ -661,7 +661,7 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
                           : 'border-zinc-200/40 dark:border-zinc-800/40 opacity-65'
                       }`}
                     >
-                      <div className="flex items-center justify-between p-3.5 gap-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-3.5 gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="flex flex-col gap-0.5">
                             <button
@@ -705,7 +705,7 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center justify-end gap-2.5 sm:gap-3 shrink-0 self-end sm:self-center">
                           <button
                             type="button"
                             onClick={() =>

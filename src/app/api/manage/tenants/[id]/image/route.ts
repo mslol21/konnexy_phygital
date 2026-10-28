@@ -7,7 +7,7 @@ import { assertSameOrigin, apiError } from '@/lib/api';
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     assertSameOrigin(req);
-    const id = z.uuid().parse((await context.params).id);
+    const id = z.string().uuid().parse((await context.params).id);
     await requireOwnedTenant(id);
     if (Number(req.headers.get('content-length') || 0) > 4_200_000) throw new AccessError(413, 'Use uma imagem de até 4 MB.');
     const form = await req.formData();

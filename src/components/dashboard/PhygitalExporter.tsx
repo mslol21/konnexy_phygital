@@ -182,7 +182,7 @@ export function PhygitalExporter({
   if (!links) return <div role="alert" className="rounded-2xl border border-amber-500/40 p-6 text-amber-600">A produção das placas está indisponível até configurar o domínio público permanente em NEXT_PUBLIC_APP_URL. Nenhum QR Code será gerado com endereço provisório.</div>;
 
   return (
-    <div className="rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-sm">
+    <div className="rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 p-4 sm:p-6 lg:p-8 shadow-sm">
       <div className="flex flex-col justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800/80 pb-6 sm:flex-row sm:items-center">
         <div>
           <div className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 px-3 py-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
@@ -215,7 +215,7 @@ export function PhygitalExporter({
             {/* Placa física de Acrílico Cristal */}
             <motion.div
               whileHover={{ y: -4 }}
-              className="relative w-72 sm:w-80 rounded-[32px] border-2 border-white/40 dark:border-white/15 bg-gradient-to-b from-white via-zinc-50 to-zinc-100 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-950 p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] overflow-hidden"
+              className="relative w-full max-w-[280px] sm:max-w-[320px] rounded-[32px] border-2 border-white/40 dark:border-white/15 bg-gradient-to-b from-white via-zinc-50 to-zinc-100 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-950 p-5 sm:p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] overflow-hidden"
             >
               {/* Reflexo diagonal de superfície acrílica */}
               <div
@@ -246,7 +246,7 @@ export function PhygitalExporter({
 
               {/* Container do QR Code Vetorial com Logo Central */}
               <div
-                className="relative mx-auto mt-4 flex h-52 w-52 items-center justify-center rounded-2xl bg-white p-3 shadow-inner border-2"
+                className="relative mx-auto mt-4 flex h-44 w-44 sm:h-52 sm:w-52 items-center justify-center rounded-2xl bg-white p-2.5 sm:p-3 shadow-inner border-2"
                 style={{ borderColor: `${primaryColor}35` }}
               >
                 {previewSvg ? (
@@ -312,14 +312,14 @@ export function PhygitalExporter({
               </span>
             </div>
 
-            <div className="mt-2.5 flex items-center gap-2">
+            <div className="mt-2.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <code className="flex-1 truncate rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs font-mono text-zinc-800 dark:text-zinc-200">
                 {nfcUrl}
               </code>
               <button
                 type="button"
                 onClick={() => copyLink(nfcUrl, 'nfc')}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 px-3.5 py-2 text-xs font-bold text-white dark:text-zinc-900 hover:opacity-90 transition"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 px-3.5 py-2 text-xs font-bold text-white dark:text-zinc-900 hover:opacity-90 transition shrink-0"
               >
                 {copiedType === 'nfc' ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                 {copiedType === 'nfc' ? 'Copiado' : 'Copiar'}

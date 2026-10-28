@@ -175,7 +175,7 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
   });
 
   return (
-    <fieldset disabled={saving} className="min-h-screen bg-zinc-950 text-zinc-100 p-4 sm:p-8 lg:p-10">
+    <fieldset disabled={saving} className="min-h-screen bg-zinc-950 text-zinc-100 p-3 sm:p-6 lg:p-8 pb-28 md:pb-12">
       <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8">
         {/* TOPBAR DO SUPER ADMIN */}
         <header className="flex flex-col justify-between gap-4 border-b border-zinc-800/80 pb-6 sm:flex-row sm:items-center">
@@ -685,7 +685,7 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
       {/* MODAL DE PROVISIONAMENTO DE NOVO COMÉRCIO */}
       <AnimatePresence>
         {isProvisionModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -698,7 +698,7 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8 shadow-2xl"
+              className="relative z-10 w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl border border-zinc-800 bg-zinc-900 p-4 sm:p-8 shadow-2xl"
             >
               <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
                 <div>

@@ -4,7 +4,7 @@ import { getPublicTenant } from '@/lib/tenants';
 import { apiError } from '@/lib/api';
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const parsed = z.uuid().safeParse((await context.params).id);
+    const parsed = z.string().uuid().safeParse((await context.params).id);
     if (!parsed.success) return new NextResponse('Placa não encontrada.', { status:404 });
     const record = await getPublicTenant(parsed.data, true);
     if (!record) return new NextResponse('Placa não encontrada.', { status:404 });
