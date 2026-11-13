@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
     const admin = createAdminClient();
     const plan = tenant.plan_tier || 'starter';
     let ownerId: string | null = null;
+    let accountCreated = false;
 
     if (tenant.owner_email) {
       const normalizedEmail = tenant.owner_email.toLowerCase();
@@ -40,14 +41,16 @@ export async function POST(req: NextRequest) {
         ownerId = existingProfile.id;
       } else {
         // Provisiona automaticamente a conta do lojista no Supabase Auth se ainda não existir
-        const { data: createdAuth } = await admin.auth.admin.createUser({
+        const { data: createdAuth, error: createError } = await admin.auth.admin.createUser({
           email: normalizedEmail,
           email_confirm: true,
           user_metadata: { full_name: tenant.name }
         });
-        if (createdAuth?.user?.id) {
-          ownerId = createdAuth.user.id;
+        if (createError || !createdAuth?.user?.id) {
+          throw new AccessError(503, 'Não foi possível criar a conta do lojista. Confira o e-mail e tente novamente.');
         }
+        ownerId = createdAuth.user.id;
+        accountCreated = true;
       }
     }
 
@@ -69,7 +72,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json(
-      { id: data, records: await listManagedTenants() },
+      { id: data, records: await listManagedTenants(), accountCreated },
       { status: 201 }
     );
   } catch (error) {

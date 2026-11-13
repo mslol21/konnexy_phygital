@@ -850,6 +850,7 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
                             {/* Campos específicos: WI-FI FÁCIL */}
                             {mod.module_type === 'wifi_facil' && (
                               <div className="grid sm:grid-cols-2 gap-3">
+                                <p className="sm:col-span-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">O nome e a senha desta rede ficam disponíveis para visitantes da página. Use uma rede de convidados separada da rede do caixa e dos equipamentos internos.</p>
                                 <div>
                                   <label className="block text-[11px] font-mono font-semibold uppercase text-zinc-500">
                                     Nome da Rede (SSID)
