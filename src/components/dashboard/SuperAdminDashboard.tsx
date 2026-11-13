@@ -117,6 +117,15 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
     void persist({ ...record, tenant: { ...record.tenant, plan_tier: plan } });
   };
 
+  const copyPublicLink = async (id: string) => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/t/${id}`);
+      toast.success('Link da página copiado.');
+    } catch {
+      toast.error('Não foi possível copiar. Abra a página e copie o endereço.');
+    }
+  };
+
   const handleCreateTenant = async (e: React.FormEvent) => {
     e.preventDefault();
     if (saving) return;
@@ -130,13 +139,17 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
           .replace(/[\u0300-\u036f]/g, '')
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-+|-+$/g, '');
-      const { records, id } = await createTenant({ ...newTenantForm, slug });
+      const { records, id, accountCreated } = await createTenant({ ...newTenantForm, slug });
       setTenantsMap(records);
       setIsProvisionModalOpen(false);
       setSelectedTenantForStudio(
         Object.values(records).find((r) => r.tenant.id === id)?.tenant || null
       );
-      toast.success('Estabelecimento cadastrado no banco.');
+      if (accountCreated) {
+        toast.success('Comércio e conta cadastrados.', { description: 'O lojista deve solicitar o primeiro acesso em “Esqueceu a senha?” usando o e-mail cadastrado.', duration: 12000 });
+      } else {
+        toast.success('Estabelecimento cadastrado no banco.');
+      }
       setNewTenantForm({
         name: '',
         slug: '',
@@ -170,7 +183,8 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
       t.name.toLowerCase().includes(q) ||
       t.slug.toLowerCase().includes(q) ||
       t.nicho.toLowerCase().includes(q) ||
-      (t.owner_email || '').toLowerCase().includes(q);
+      (t.owner_email || '').toLowerCase().includes(q) ||
+      (t.whatsapp_feedback || '').includes(q);
     return matchesStatus && matchesSearch;
   });
 
@@ -454,7 +468,7 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                         <div>
                           <span className="text-zinc-400">MRR: </span>
                           <strong className="text-white">
-                            {formatCurrencyBRL(t.mrr_cents || planMeta.monthlyPriceCents)}
+                            {formatCurrencyBRL(t.mrr_cents ?? planMeta.monthlyPriceCents)}
                           </strong>
                         </div>
                         <div className="text-amber-400 font-semibold">
@@ -482,7 +496,7 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                         </button>
 
                         <a
-                          href={`/r/${t.slug}?src=nfc`}
+                          href={`/t/${t.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center justify-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white transition"
@@ -491,6 +505,7 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                           <ArrowUpRight className="h-3.5 w-3.5" />
                         </a>
                       </div>
+                      <button type="button" onClick={() => void copyPublicLink(t.id)} className="w-full rounded-xl border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-200 hover:bg-zinc-800">Copiar link da página</button>
                     </div>
                   );
                 })}
@@ -584,18 +599,18 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                             >
                               <option value="starter">Starter (Até 3 Módulos)</option>
                               <option value="pro">Pro Phygital (Até 6 Módulos)</option>
-                              <option value="enterprise">Enterprise Full (Ilimitado)</option>
+                              <option value="enterprise">Enterprise Full (Até 9 Módulos)</option>
                             </select>
                           </td>
 
                           {/* MRR */}
                           <td className="py-4 pr-4">
                             <div className="font-bold text-white">
-                              {formatCurrencyBRL(t.mrr_cents || planMeta.monthlyPriceCents)}
+                              {formatCurrencyBRL(t.mrr_cents ?? planMeta.monthlyPriceCents)}
                               <span className="text-[10px] font-normal text-zinc-500">/mês</span>
                             </div>
                             <div className="text-[11px] text-zinc-500">
-                              Venc: {t.next_billing_date || '15/11/2026'}
+                              Venc: {t.next_billing_date || 'não informado'}
                             </div>
                           </td>
 
@@ -630,7 +645,7 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                               </button>
 
                               <a
-                                href={`/r/${t.slug}?src=nfc`}
+                                href={`/t/${t.id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-zinc-700 hover:text-white transition"
@@ -638,6 +653,7 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                                 Testar Link
                                 <ArrowUpRight className="h-3.5 w-3.5" />
                               </a>
+                              <button type="button" onClick={() => void copyPublicLink(t.id)} className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white">Copiar link</button>
                             </div>
                           </td>
                         </tr>
@@ -818,6 +834,7 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                       }
                       className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"
                     />
+                    <p className="mt-1 text-[11px] text-zinc-400">Opcional. Se for uma conta nova, o lojista deverá usar “Esqueceu a senha?” para definir o acesso. Nenhum convite é enviado automaticamente.</p>
                   </div>
 
                   <div>

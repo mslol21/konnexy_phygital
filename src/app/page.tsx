@@ -18,7 +18,7 @@ import { NeonGradientCard } from '@/components/magicui/neon-gradient-card';
 import { RainbowButton } from '@/components/magicui/rainbow-button';
 
 export default function HomePage() {
-  const phone = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '').replace(/\D/g, '');
+  const phone = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5516991551200').replace(/\D/g, '');
   const contact = phone
     ? `https://wa.me/${phone}?text=${encodeURIComponent(
         'Olá! Quero saber mais sobre a placa Konnexy Tag para meu negócio.'
@@ -104,7 +104,7 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-4 sm:mt-6 text-sm sm:text-lg text-zinc-300 leading-relaxed max-w-2xl">
-              Com uma placa NFC e QR Code de alta precisão (ECC Level H), seus clientes acessam avaliações no Google, WhatsApp, Pix, Wi-Fi e cardápio instantaneamente no celular.
+              Com uma placa NFC e QR Code, seus clientes acessam avaliações no Google, WhatsApp, Pix, Wi-Fi e cardápio pelo celular.
             </p>
 
             <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
@@ -120,10 +120,10 @@ export default function HomePage() {
                 </a>
               ) : (
                 <Link
-                  href="/login"
+                  href="https://konnexy.com.br/"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 text-zinc-950 px-6 py-3.5 text-sm font-bold shadow-lg shadow-amber-400/20 hover:bg-amber-300 transition text-center"
                 >
-                  Começar agora
+                  Falar com a Konnexy
                   <ArrowRight size={18} />
                 </Link>
               )}
@@ -132,7 +132,7 @@ export default function HomePage() {
                 href="/r/barbearia-premium"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/80 px-6 py-3.5 text-sm font-semibold text-zinc-200 hover:bg-zinc-800 hover:text-white transition text-center"
               >
-                Ver demonstração real
+                Ver demonstração
               </Link>
 
               <a
@@ -272,9 +272,9 @@ export default function HomePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-8">
               {[
                 { title: 'Links Imutáveis com Redirecionamento Dinâmico', desc: 'Altere promoções, WhatsApp ou serviços sem nunca precisar reimprimir a placa acrílica.' },
-                { title: 'QR Code Vetorial de Alta Densidade (ECC Level H)', desc: 'Leitura mesmo com até 30% de desgaste físico ou arranhões na peça.' },
+                { title: 'QR Code para impressão', desc: 'Uma alternativa para clientes que preferem usar a câmera do celular.' },
                 { title: 'Compatível com Web NFC API e iPhones', desc: 'Funciona com aproximação nativa em Android e leitura de câmera em iOS.' },
-                { title: 'Painel Master Mobile & PWA Instalável', desc: 'Gerencie múltiplos comércios, consulte acessos e ative kill-switch pelo celular.' }
+                { title: 'Gestão pelo celular', desc: 'Gerencie comércios, consulte acessos e pause páginas pelo painel.' }
               ].map((item) => (
                 <div key={item.title} className="flex gap-3.5">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 mt-0.5">
