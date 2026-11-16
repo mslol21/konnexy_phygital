@@ -48,6 +48,7 @@ export interface Tenant {
   nfc_30d?: number;
   qr_30d?: number;
   google_clicks_30d?: number;
+  module_clicks_30d?: Partial<Record<ModuleType, number>>;
   reviews_30d?: number;
   created_at: string;
 }

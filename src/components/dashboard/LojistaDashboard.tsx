@@ -405,6 +405,18 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
             </div>
           </section>
 
+          <section className="rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-3">
+            <h2 className="text-sm font-bold">Interações por ferramenta — últimos 30 dias</h2>
+            <p className="text-xs text-zinc-500">São cliques registrados, não confirmações de pedidos, pagamentos, contatos ou avaliações.</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {modules.filter(mod=>mod.is_active).map(mod=><div key={mod.id}
+                className="rounded-xl border border-zinc-200 dark:border-zinc-700 p-3">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">{MODULE_META[mod.module_type]?.label || mod.module_type}</p>
+                <p className="mt-1 text-xl font-bold">{tenantProfile.module_clicks_30d?.[mod.module_type] || 0}</p>
+              </div>)}
+            </div>
+          </section>
+
           {/* =================================================================
            * 2. BENTO GRID: EDITOR COMPLETO DO PERFIL + GERENCIADOR DE MÓDULOS
            * ================================================================= */}

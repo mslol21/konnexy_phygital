@@ -30,6 +30,13 @@ export async function listManagedTenants() {
     " FROM public.analytics_events WHERE tenant_id=ANY($1::uuid[]) AND created_at >= now()-interval '30 days' GROUP BY tenant_id",
     [ids]
   );
+  const moduleClicks = await query<{tenant_id:string;module_type:string;clicks:string}>(
+    "SELECT tenant_id,module_type::text AS module_type,count(*)::text AS clicks"+
+    " FROM public.analytics_events WHERE tenant_id=ANY($1::uuid[])"+
+    " AND event_type='module_click' AND created_at>=now()-interval '30 days'"+
+    " AND module_type IS NOT NULL GROUP BY tenant_id,module_type",
+    [ids]
+  );
   return Object.fromEntries(tenants.map(tenant => {
     const counts = metrics.find(m => m.tenant_id === tenant.id);
     return [tenant.slug, {
@@ -38,7 +45,8 @@ export async function listManagedTenants() {
         taps_30d: Number(counts?.views || 0),
         nfc_30d: Number(counts?.nfc || 0),
         qr_30d: Number(counts?.qr || 0),
-        google_clicks_30d: Number(counts?.google_clicks || 0)
+        google_clicks_30d: Number(counts?.google_clicks || 0),
+        module_clicks_30d: Object.fromEntries(moduleClicks.filter(row=>row.tenant_id===tenant.id).map(row=>[row.module_type,Number(row.clicks)]))
       },
       modules: modules.filter(m => m.tenant_id === tenant.id)
     }];
