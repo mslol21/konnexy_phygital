@@ -24,6 +24,7 @@ export async function PUT(req:NextRequest,context:{params:Promise<{id:string}>})
     };
     await query('SELECT public.save_managed_tenant($1::uuid,$2::uuid,$3::jsonb,$4::jsonb) AS id',
       [user.id,id,JSON.stringify(tenant),JSON.stringify(modules)]);
+    await query('UPDATE public.tenants SET background_theme=$1 WHERE id=$2::uuid', [input.tenant.background_theme || 'dark',id]);
     return NextResponse.json({records:await listManagedTenants()});
   } catch(error) {
     if (String(error).includes('23505') || String(error).includes('duplicate key'))

@@ -20,6 +20,7 @@ export interface PublicTenantDTO {
   logo_url: string | null;
   cover_url: string | null;
   primary_color: string;
+  background_theme: 'dark' | 'cream' | 'sage' | 'lavender' | 'blush' | 'sky';
   google_place_id: string | null;
   status: TenantStatus;
   whatsapp_feedback: string | null;
@@ -59,6 +60,7 @@ export function toPublicTenantDTO(raw: Partial<Tenant> & { slug: string; name: s
     primary_color: /^#[0-9A-Fa-f]{6}$/.test(String(raw.primary_color || ''))
       ? String(raw.primary_color)
       : '#0F172A',
+    background_theme: ['cream','sage','lavender','blush','sky'].includes(raw.background_theme || '') ? (raw.background_theme as PublicTenantDTO['background_theme']) : 'dark',
     google_place_id: raw.google_place_id ? String(raw.google_place_id) : null,
     status: (raw.status as TenantStatus) || 'active',
     // Telefone comercial público, quando configurado.

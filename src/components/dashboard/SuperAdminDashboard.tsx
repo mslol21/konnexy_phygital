@@ -79,6 +79,7 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
     whatsapp_feedback: '',
     google_place_id: '',
     primary_color: '#6366F1',
+    background_theme: 'dark' as const,
     plan_tier: 'pro' as PlanTier
   });
 
@@ -159,6 +160,7 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
         whatsapp_feedback: '',
         google_place_id: '',
         primary_color: '#6366F1',
+        background_theme: 'dark' as const,
         plan_tier: 'starter'
       });
     } catch (error) {

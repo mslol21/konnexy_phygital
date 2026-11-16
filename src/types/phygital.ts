@@ -1,5 +1,6 @@
 export type UserRole = 'super_admin' | 'tenant_admin';
 export type TenantStatus = 'active' | 'suspended' | 'trial' | 'canceled';
+export type BackgroundTheme = 'dark' | 'cream' | 'sage' | 'lavender' | 'blush' | 'sky';
 export type PlanTier = 'starter' | 'pro' | 'enterprise';
 
 export type ModuleType =
@@ -34,6 +35,7 @@ export interface Tenant {
   logo_url: string | null;
   cover_url?: string | null;
   primary_color: string;
+  background_theme?: BackgroundTheme;
   google_place_id: string | null;
   whatsapp_feedback: string | null;
   status?: TenantStatus;

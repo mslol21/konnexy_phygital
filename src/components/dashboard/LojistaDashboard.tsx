@@ -40,7 +40,8 @@ import {
   Trash2,
   ImagePlus
 } from 'lucide-react';
-import type { ModuleType, Tenant, TenantModule } from '@/types/phygital';
+import { BACKGROUND_PALETTES } from '@/lib/background-palettes';
+import type { ModuleType, Tenant, TenantModule, BackgroundTheme } from '@/types/phygital';
 
 const MODULE_META: Record<
   ModuleType,
@@ -580,6 +581,34 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
                     </div>
                   </div>
 
+
+                  <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 p-3 space-y-3">
+                    <div>
+                      <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Fundo da página pública</p>
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Escolha um tom suave para a página aberta por NFC ou QR Code. A opção escura original continua disponível.</p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(Object.entries(BACKGROUND_PALETTES) as [BackgroundTheme, typeof BACKGROUND_PALETTES[BackgroundTheme]][]).map(([key, palette]) => (
+                        <button key={key} type="button" aria-pressed={(tenantProfile.background_theme || 'dark') === key}
+                          onClick={() => setTenantProfile({ ...tenantProfile, background_theme: key })}
+                          className={`rounded-xl border-2 p-2 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${(tenantProfile.background_theme || 'dark') === key ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-zinc-200 dark:border-zinc-700'}`}>
+                          <span className="block h-9 rounded-lg border border-black/5" style={{background: `linear-gradient(135deg, ${palette.background}, ${palette.tint})`}} />
+                          <span className="block mt-1.5 text-[11px] font-semibold text-zinc-700 dark:text-zinc-200">{palette.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="rounded-xl border border-zinc-200 p-3" style={{ background: `linear-gradient(145deg, ${BACKGROUND_PALETTES[tenantProfile.background_theme || 'dark'].background}, ${BACKGROUND_PALETTES[tenantProfile.background_theme || 'dark'].tint})` }}>
+                      <div className="rounded-lg bg-white/95 p-3 shadow-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="h-7 w-7 rounded-lg" style={{backgroundColor:tenantProfile.primary_color}} />
+                          <div>
+                            <p className="text-xs font-semibold text-zinc-800">{tenantProfile.name}</p>
+                            <p className="text-[10px] text-zinc-500">Prévia da página pública</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <div>
                     <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400">
                       Link do Google Maps / Avaliação (ou Place ID)

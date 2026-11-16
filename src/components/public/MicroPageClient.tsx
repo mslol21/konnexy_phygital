@@ -15,6 +15,7 @@ const BentoModulesGrid = dynamic(
   }
 );
 import { trackEvent } from '@/lib/telemetry';
+import { BACKGROUND_PALETTES } from '@/lib/background-palettes';
 import type { Tenant, TenantModule, AccessSource } from '@/types/phygital';
 
 /**
@@ -45,7 +46,7 @@ export function MicroPageClient({
   modules: TenantModule[];
   accessSource: AccessSource;
 }) {
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState((tenant.background_theme || 'dark') === 'dark');
   const [experience, setExperience] = useState('');
   const [suggestion, setSuggestion] = useState('');
   const [loading, setLoading] = useState(false);
@@ -100,9 +101,12 @@ export function MicroPageClient({
     }
   }
 
+  const palette = BACKGROUND_PALETTES[tenant.background_theme || 'dark'];
+  const lightBackground = !dark && tenant.background_theme !== 'dark';
+
   return (
     <div className={dark ? 'dark' : ''}>
-      <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-white px-3 sm:px-4 py-6 sm:py-8">
+      <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-white px-3 sm:px-4 py-6 sm:py-8 transition-colors duration-300" style={!dark ? { backgroundColor: lightBackground ? palette.background : "#f4f4f5", backgroundImage: lightBackground ? `linear-gradient(145deg, ${palette.background}, ${palette.tint})` : undefined } : undefined}>
         <main className="mx-auto max-w-[460px] space-y-5">
           {demo && (
             <aside className="rounded-xl border border-amber-500 bg-amber-100 p-4 text-sm text-amber-950">
@@ -118,7 +122,7 @@ export function MicroPageClient({
             <NeonGradientCard
               borderRadius={24}
               borderSize={1.5}
-              neonColors={{ firstColor: tenant.primary_color, secondColor: '#6366f1' }}
+              neonColors={{ firstColor: lightBackground ? palette.accent : tenant.primary_color, secondColor: lightBackground ? palette.tint : '#6366f1' }}
               innerClassName="relative overflow-hidden p-6 text-center bg-white dark:bg-zinc-900"
             >
               {tenant.cover_url && (
@@ -128,7 +132,7 @@ export function MicroPageClient({
                     alt=""
                     className="absolute inset-0 h-full w-full object-cover opacity-35 dark:opacity-40"
                   />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/25 via-black/45 to-zinc-950/90" />
+                  <div className={lightBackground ? "pointer-events-none absolute inset-0 bg-gradient-to-b from-white/55 via-white/70 to-white/95" : "pointer-events-none absolute inset-0 bg-gradient-to-b from-black/25 via-black/45 to-zinc-950/90"} />
                 </>
               )}
               <div className="relative z-10">
@@ -163,7 +167,7 @@ export function MicroPageClient({
               <NeonGradientCard
                 borderRadius={24}
                 borderSize={1.5}
-                neonColors={{ firstColor: '#4285F4', secondColor: '#EA4335' }}
+                neonColors={{ firstColor: lightBackground ? palette.accent : '#4285F4', secondColor: lightBackground ? palette.tint : '#EA4335' }}
                 innerClassName="relative overflow-hidden p-6 bg-white/95 dark:bg-zinc-900/95"
               >
                 <GoogleReviewBackground size={160} opacity={0.18} />

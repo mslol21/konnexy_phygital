@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
       'SELECT public.save_managed_tenant($1::uuid,NULL,$2::jsonb,NULL) AS id',
       [user.id,JSON.stringify(payload)]
     );
+    await query('UPDATE public.tenants SET background_theme=$1 WHERE id=$2::uuid', [tenant.background_theme || 'dark',result[0].id]);
     return NextResponse.json({id:result[0].id,records:await listManagedTenants()},{status:201});
   } catch (error) {
     if (String(error).includes('23505') || String(error).includes('duplicate key'))

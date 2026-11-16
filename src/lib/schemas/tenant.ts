@@ -11,6 +11,7 @@ export const tenantSchema = z.object({
   name: text(120).min(2), nicho: text(120).min(2), bio: text(1000).nullable().optional(),
   logo_url: imageUrl, cover_url: imageUrl,
   primary_color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  background_theme: z.enum(['dark','cream','sage','lavender','blush','sky']).optional(),
   google_place_id: text(256).nullable().optional(),
   whatsapp_feedback: text(20).regex(/^\+?[0-9]*$/).nullable().optional(),
   status: z.enum(['active','trial','suspended','canceled']).optional(),
