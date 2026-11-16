@@ -490,7 +490,7 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
                       rel="noopener noreferrer"
                       whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.97 }}
-                      className="col-span-1 flex"
+                      className={`${links.length === 1 ? 'col-span-2' : 'col-span-1'} flex min-w-0`}
                     >
                       <NeonGradientCard
                         borderSize={1.5}
