@@ -8,6 +8,7 @@ import { PLAN_LIMITS } from '@/lib/auth/rbac';
 import type { Tenant, TenantModule } from '@/types/phygital';
 
 export type TenantRecord = { tenant: Tenant; modules: TenantModule[] };
+type DBTenant = Tenant & { is_active: boolean; is_demo: boolean; status: 'active' | 'trial' | 'suspended' | 'canceled' };
 
 export async function listManagedTenants() {
   const { user, role } = await requireSession();
@@ -47,7 +48,7 @@ export async function listManagedTenants() {
 export async function getPublicTenant(value: string, byId = false) {
   const demo = getDemoTenant(value, byId);
   if (demo) return demo;
-  const data = await query<Tenant>(
+  const data = await query<DBTenant>(
     'SELECT * FROM public.tenants WHERE '+(byId ? 'id=$1::uuid' : 'slug=$1')+' LIMIT 1',
     [value]
   );
