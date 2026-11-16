@@ -55,6 +55,7 @@ export default function ResetPasswordPage() {
       const formData = new FormData();
       formData.set('password', parsed.data.password);
       formData.set('confirmPassword', parsed.data.confirmPassword);
+      formData.set('token', new URLSearchParams(window.location.search).get('token') || '');
 
       const res = await updatePassword(formData);
       if (res.success) {

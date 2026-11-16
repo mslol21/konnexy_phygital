@@ -1,47 +1,78 @@
 import 'server-only';
 import { getDemoTenant } from '@/lib/demo-tenants';
-import { createAdminClient } from '@/utils/supabase/admin';
+import { query } from '@/lib/db';
 import { requireSession, AccessError } from '@/lib/auth/session';
 import { toPublicTenantDTO } from '@/lib/dto/public-tenant.dto';
 import { sanitizePublicModules } from '@/lib/schemas/tenant';
 import { PLAN_LIMITS } from '@/lib/auth/rbac';
 import type { Tenant, TenantModule } from '@/types/phygital';
+
 export type TenantRecord = { tenant: Tenant; modules: TenantModule[] };
+
 export async function listManagedTenants() {
-  const { user, role, supabase } = await requireSession();
-  let query = supabase.from('tenants').select('*').eq('is_demo', false).order('created_at', { ascending: false });
-  if (role !== 'super_admin') query = query.eq('owner_id', user.id);
-  const { data: tenants, error } = await query;
-  if (error) throw error;
-  const ids = (tenants || []).map(t => t.id);
-  if (!ids.length) return {} as Record<string, TenantRecord>;
-  const { data: modules, error: moduleError } = await supabase.from('tenant_modules').select('*').in('tenant_id', ids).order('order_index');
-  if (moduleError) throw moduleError;
-  const { data: metrics, error: metricsError } = await createAdminClient().rpc('tenant_metrics', { tenant_ids: ids });
-  if (metricsError) throw metricsError;
-  return Object.fromEntries((tenants || []).map(tenant => {
-    const counts = (metrics || []).find((m: { tenant_id: string }) => m.tenant_id === tenant.id) || {};
-    return [tenant.slug, { tenant: { ...tenant, taps_30d: Number(counts.views || 0), nfc_30d: Number(counts.nfc || 0), qr_30d: Number(counts.qr || 0), google_clicks_30d: Number(counts.google_clicks || 0) }, modules: (modules || []).filter(m => m.tenant_id === tenant.id) }];
+  const { user, role } = await requireSession();
+  const tenants = await query<Tenant>(
+    'SELECT * FROM public.tenants WHERE is_demo = false AND ($1::text = '+ "'super_admin'"+' OR owner_id = $2::uuid) ORDER BY created_at DESC',
+    [role, user.id]
+  );
+  if (!tenants.length) return {} as Record<string, TenantRecord>;
+  const ids = tenants.map(t => t.id);
+  const modules = await query<TenantModule>(
+    'SELECT * FROM public.tenant_modules WHERE tenant_id = ANY($1::uuid[]) ORDER BY order_index',
+    [ids]
+  );
+  const metrics = await query<{tenant_id:string;views:string;nfc:string;qr:string;google_clicks:string}>(
+    "SELECT tenant_id, count(*) FILTER (WHERE event_type='page_view') AS views,"+
+    " count(*) FILTER (WHERE event_type='page_view' AND source='nfc') AS nfc,"+
+    " count(*) FILTER (WHERE event_type='page_view' AND source='qr') AS qr,"+
+    " count(*) FILTER (WHERE event_type='module_click' AND module_type='google_reviews') AS google_clicks"+
+    " FROM public.analytics_events WHERE tenant_id=ANY($1::uuid[]) AND created_at >= now()-interval '30 days' GROUP BY tenant_id",
+    [ids]
+  );
+  return Object.fromEntries(tenants.map(tenant => {
+    const counts = metrics.find(m => m.tenant_id === tenant.id);
+    return [tenant.slug, {
+      tenant: {
+        ...tenant,
+        taps_30d: Number(counts?.views || 0),
+        nfc_30d: Number(counts?.nfc || 0),
+        qr_30d: Number(counts?.qr || 0),
+        google_clicks_30d: Number(counts?.google_clicks || 0)
+      },
+      modules: modules.filter(m => m.tenant_id === tenant.id)
+    }];
   })) as Record<string, TenantRecord>;
 }
+
 export async function getPublicTenant(value: string, byId = false) {
   const demo = getDemoTenant(value, byId);
   if (demo) return demo;
-  const admin = createAdminClient();
-  const { data, error } = await admin.from('tenants').select('id,slug,name,nicho,bio,logo_url,cover_url,primary_color,google_place_id,whatsapp_feedback,status,created_at,is_active,plan_tier,is_demo').eq(byId ? 'id' : 'slug', value).maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
-  if (!data.is_active || !['active','trial'].includes(data.status)) return { unavailable: true as const };
-  const { data: modules, error: moduleError } = await admin.from('tenant_modules').select('id,tenant_id,module_type,title,is_active,config_data,order_index').eq('tenant_id', data.id).eq('is_active', true);
-  if (moduleError) throw moduleError;
-  const plan = PLAN_LIMITS[data.plan_tier as keyof typeof PLAN_LIMITS];
+  const data = await query<Tenant>(
+    'SELECT * FROM public.tenants WHERE '+(byId ? 'id=$1::uuid' : 'slug=$1')+' LIMIT 1',
+    [value]
+  );
+  const tenant = data[0];
+  if (!tenant) return null;
+  if (!tenant.is_active || !['active','trial'].includes(tenant.status))
+    return { unavailable: true as const };
+  const modules = await query<TenantModule>(
+    'SELECT id,tenant_id,module_type,title,is_active,config_data,order_index FROM public.tenant_modules WHERE tenant_id=$1::uuid AND is_active=true ORDER BY order_index',
+    [tenant.id]
+  );
+  const plan = PLAN_LIMITS[tenant.plan_tier as keyof typeof PLAN_LIMITS];
   const allowed = plan?.allowedModules || PLAN_LIMITS.starter.allowedModules;
-  return { unavailable: false as const, demo: Boolean(data.is_demo), tenant: toPublicTenantDTO(data), modules: sanitizePublicModules(modules || []).filter(m => allowed.includes(m.module_type)).slice(0, plan?.maxActiveModules || 3) };
+  return {
+    unavailable: false as const, demo: Boolean(tenant.is_demo),
+    tenant: toPublicTenantDTO(tenant),
+    modules: sanitizePublicModules(modules).filter(m => allowed.includes(m.module_type)).slice(0,plan?.maxActiveModules || 3)
+  };
 }
+
 export async function requireOwnedTenant(id: string) {
   const session = await requireSession();
-  const { data, error } = await session.supabase.from('tenants').select('*').eq('id', id).maybeSingle();
-  if (error) throw error;
-  if (!data || (session.role !== 'super_admin' && data.owner_id !== session.user.id)) throw new AccessError(404, 'Estabelecimento não encontrado.');
-  return { ...session, tenant: data as Tenant };
+  const data = await query<Tenant>('SELECT * FROM public.tenants WHERE id=$1::uuid LIMIT 1',[id]);
+  const tenant = data[0];
+  if (!tenant || (session.role !== 'super_admin' && tenant.owner_id !== session.user.id))
+    throw new AccessError(404, 'Estabelecimento não encontrado.');
+  return { ...session, tenant };
 }

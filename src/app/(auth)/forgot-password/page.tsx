@@ -93,10 +93,10 @@ export default function ForgotPasswordPage() {
             <p className="text-xs leading-relaxed text-zinc-200">{sentMessage}</p>
             <div className="pt-2">
               <Link
-                href="/reset-password"
+                href="/login"
                 className="inline-flex items-center justify-center w-full rounded-xl bg-white py-2.5 text-xs font-bold text-zinc-950 hover:bg-zinc-100 transition"
               >
-                Simular Abertura do Link (/reset-password)
+                Voltar para o login
               </Link>
             </div>
           </div>
