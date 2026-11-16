@@ -32,6 +32,7 @@ import {
   ArrowUpRight,
   Settings2
 } from 'lucide-react';
+import { GoogleBusinessFinder } from '@/components/dashboard/GoogleBusinessFinder';
 import type { Tenant, TenantStatus, PlanTier } from '@/types/phygital';
 
 const STATUS_BADGES: Record<
@@ -871,23 +872,12 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-400">
-                      Link do Google Maps / Avaliação (ou Place ID)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="https://maps.app.goo.gl/... ou ChIJ..."
-                      value={newTenantForm.google_place_id}
-                      onChange={(e) =>
-                        setNewTenantForm({
-                          ...newTenantForm,
-                          google_place_id: e.target.value
-                        })
-                      }
-                      className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-xs text-white"
-                    />
-                  </div>
+                  <GoogleBusinessFinder
+                    value={newTenantForm.google_place_id}
+                    initialQuery={newTenantForm.name}
+                    onChange={placeId => setNewTenantForm(prev => ({ ...prev, google_place_id: placeId }))}
+                    compact
+                  />
 
                   <div>
                     <label className="block text-xs font-semibold text-zinc-400">

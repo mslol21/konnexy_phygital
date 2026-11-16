@@ -41,6 +41,7 @@ import {
   ImagePlus
 } from 'lucide-react';
 import { BACKGROUND_PALETTES } from '@/lib/background-palettes';
+import { GoogleBusinessFinder } from '@/components/dashboard/GoogleBusinessFinder';
 import type { ModuleType, Tenant, TenantModule, BackgroundTheme } from '@/types/phygital';
 
 const MODULE_META: Record<
@@ -609,22 +610,11 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
                       </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400">
-                      Link do Google Maps / Avaliação (ou Place ID)
-                    </label>
-                    <input
-                      type="text"
-                      value={tenantProfile.google_place_id || ''}
-                      onChange={(e) =>
-                        setTenantProfile({
-                          ...tenantProfile,
-                          google_place_id: e.target.value
-                        })
-                      }
-                      className="mt-1 w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-900 dark:text-zinc-100"
-                    />
-                  </div>
+                  <GoogleBusinessFinder
+                    value={tenantProfile.google_place_id || ''}
+                    initialQuery={tenantProfile.name}
+                    onChange={placeId => setTenantProfile(prev => ({ ...prev, google_place_id: placeId }))}
+                  />
 
                   <div>
                     <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400">
