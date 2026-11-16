@@ -185,7 +185,7 @@ export function MicroPageClient({
               </NeonGradientCard>
             )}
 
-            <BentoModulesGrid tenant={tenant} modules={modules} demo={demo} />
+            <BentoModulesGrid tenant={tenant} modules={modules} demo={demo} accessSource={accessSource} />
           </div>
 
           <footer className="text-center py-4 text-xs text-zinc-500">

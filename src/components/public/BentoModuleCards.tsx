@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
+import { staticPixPayload } from '@/lib/pix';
+import { trackEvent } from '@/lib/telemetry';
 import {
   QrCode,
   Copy,
@@ -29,6 +31,7 @@ import {
 import type {
   Tenant,
   TenantModule,
+  AccessSource,
   WhatsAppDirectConfig,
   PixFacilConfig,
   CardapioLinkConfig,
@@ -42,6 +45,7 @@ interface BentoModulesGridProps {
   tenant: Tenant;
   modules: TenantModule[];
   demo?: boolean;
+  accessSource: AccessSource;
 }
 
 type DrawerState =
@@ -51,10 +55,11 @@ type DrawerState =
   | { type: 'pix'; title: string; cfg: PixFacilConfig }
   | null;
 
-export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModulesGridProps) {
+export function BentoModulesGrid({ tenant, modules, demo = false, accessSource }: BentoModulesGridProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeDrawer, setActiveDrawer] = useState<DrawerState>(null);
   const [drawerQrSvg, setDrawerQrSvg] = useState<string | null>(null);
+  const [qrError, setQrError] = useState<string | null>(null);
 
   // Filtra módulos secundários (o google_reviews já é renderizado em destaque no topo)
   const secondaryModules = modules.filter(
@@ -69,13 +74,16 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
     }
 
     let payload = '';
-    if (activeDrawer.type === 'wifi') {
-      const { ssid, password, encryption = 'WPA' } = activeDrawer.cfg;
-      payload = `WIFI:S:${ssid};T:${encryption};P:${password || ''};;`;
-    } else if (activeDrawer.type === 'pix') {
-      // A Pix key is not an EMV payment payload: offer key copy only.
-      payload = '';
-    }
+    setQrError(null);
+    try {
+      if (activeDrawer.type === 'wifi') {
+        const { ssid, password, encryption = 'WPA' } = activeDrawer.cfg;
+        const escapeWifi = (v:string) => v.replace(/([\\;,:"])/g,'\\$1');
+        payload = `WIFI:T:${encryption};S:${escapeWifi(ssid)};P:${escapeWifi(encryption==='nopass'?'':password||'')};;`;
+      } else if (activeDrawer.type === 'pix') {
+        payload = staticPixPayload(activeDrawer.cfg);
+      }
+    } catch { setQrError('Não foi possível gerar QR Code. Confira os dados cadastrados.'); }
 
     if (payload) {
       QRCode.toString(payload, {
@@ -85,7 +93,7 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
         color: { dark: '#09090B', light: '#FFFFFF' }
       })
         .then(setDrawerQrSvg)
-        .catch(() => setDrawerQrSvg(null));
+        .catch(() => { setDrawerQrSvg(null); setQrError('Falha ao gerar QR Code.'); });
     }
   }, [activeDrawer]);
 
@@ -100,7 +108,16 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3.5">
+      <div className="grid grid-cols-2 gap-3.5"
+        onClickCapture={event => {
+          if (demo) return;
+          const target=event.target;
+          if (!(target instanceof Element)) return;
+          const node=target.closest('[data-module-type]');
+          const type=node?.getAttribute('data-module-type');
+          if (type && modules.some(mod=>mod.is_active&&mod.module_type===type))
+            trackEvent(tenant.id,accessSource,'module_click',type as TenantModule['module_type']);
+        }}>
         {secondaryModules.map((mod) => {
           const brandColor = tenant.primary_color || '#f59e0b';
 
@@ -120,6 +137,7 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
               return (
                 <motion.a
                   key={mod.id}
+                  data-module-type={mod.module_type}
                   href={demo ? undefined : waHref}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -174,6 +192,7 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
               return (
                 <motion.div
                   key={mod.id}
+                  data-module-type={mod.module_type}
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() =>
@@ -241,16 +260,11 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
               return (
                 <motion.button
                   key={mod.id}
+                  data-module-type={mod.module_type}
                   type="button"
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => {
-                    if (cfg.password) {
-                      navigator.clipboard.writeText(cfg.password);
-                      toast.success(`Senha do Wi-Fi "${cfg.ssid}" copiada!`, {
-                        description: 'Escaneie o código na tela para conectar automaticamente.'
-                      });
-                    }
                     setActiveDrawer({
                       type: 'wifi',
                       title: `Wi-Fi: ${cfg.ssid}`,
@@ -273,7 +287,7 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
                         <Wifi className="h-5 w-5" />
                       </div>
                       <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold text-sky-600 dark:text-sky-300">
-                        5G Grátis
+                        Wi-Fi de convidados
                       </span>
                     </div>
 
@@ -352,7 +366,7 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
               const serviceBrand = resolveServiceBrandByNicho(tenant.nicho);
 
               return (
-                <motion.div key={mod.id} className="col-span-2">
+                <motion.div key={mod.id} data-module-type={mod.module_type} className="col-span-2">
                   <NeonGradientCard
                     borderSize={1.5}
                     borderRadius={20}
@@ -485,6 +499,7 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
                   {links.map((item) => (
                     <motion.a
                       key={item.label}
+                      data-module-type={mod.module_type}
                       href={item.url}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -532,6 +547,7 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
               return (
                 <a
                   key={mod.id}
+                  data-module-type={mod.module_type}
                   href={cfg.url || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -609,6 +625,7 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
               {/* Conteúdo: WI-FI QR */}
               {activeDrawer.type === 'wifi' && (
                 <div className="mt-5 text-center space-y-4">
+                  {qrError && <p role="alert" className="text-xs text-rose-500">{qrError}</p>}
                   {drawerQrSvg && (
                     <div
                       className="mx-auto h-48 w-48 rounded-2xl border border-zinc-200 bg-white p-3 shadow-sm"
@@ -650,6 +667,8 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
               {/* Conteúdo: PIX QR */}
               {activeDrawer.type === 'pix' && (
                 <div className="mt-5 text-center space-y-4">
+                  <p className="text-xs text-zinc-500">QR Pix estático. Não confirma pagamento nem possui valor predefinido.</p>
+                  {qrError && <p role="alert" className="text-xs text-rose-500">{qrError}</p>}
                   {drawerQrSvg && (
                     <div
                       className="mx-auto h-48 w-48 rounded-2xl border border-zinc-200 bg-white p-3 shadow-sm"
@@ -686,7 +705,9 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
                       key={item.id}
                       className="flex items-center justify-between rounded-2xl border border-zinc-200/70 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/60 p-3.5"
                     >
-                      <div className="pr-3">
+                      <div className="flex items-center gap-3 pr-3">
+                        {item.image_url && <img src={item.image_url} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-lg object-cover" />}
+                        <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
                             {item.title}
@@ -702,6 +723,7 @@ export function BentoModulesGrid({ tenant, modules, demo = false }: BentoModules
                             {item.description}
                           </p>
                         )}
+                        </div>
                       </div>
                       <span className="shrink-0 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
                         {item.price}
