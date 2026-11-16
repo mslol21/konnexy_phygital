@@ -19,7 +19,7 @@ const PhygitalExporter = dynamic(
   }
 );
 import { saveTenant, uploadTenantImage, type TenantFullRecord, type TenantMap } from '@/lib/managed-client';
-import { cropAndResizeCoverImageToBlob, IDEAL_COVER_WIDTH, IDEAL_COVER_HEIGHT } from '@/lib/images';
+import { cropAndResizeCoverImageToBlob, compressLogoToBlob, IDEAL_COVER_WIDTH, IDEAL_COVER_HEIGHT } from '@/lib/images';
 import { PLAN_LIMITS } from '@/lib/auth/rbac';
 import {
   LayoutGrid,
@@ -149,7 +149,8 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
     const file = e.target.files?.[0]; if (!file) return;
     setSaving(true);
     try {
-      const url = await uploadTenantImage(tenantProfile.id, file);
+      const optimized = await compressLogoToBlob(file);
+      const url = await uploadTenantImage(tenantProfile.id, optimized);
       await persistCurrentProfile({ ...tenantProfile, logo_url: url }, modules);
       toast.success('Logo salva e publicada.');
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Não foi possível enviar a imagem.'); }
@@ -436,7 +437,7 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
                       Exibida no topo e no centro do QR Code
                     </p>
                     <label className="mt-1.5 inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-100 px-2.5 py-1 text-[11px] font-bold text-white dark:text-zinc-900 hover:opacity-90 transition">
-                      <span>Enviar Logo (PNG/SVG)</span>
+                      <span>Enviar Logo (JPG/PNG/WebP)</span>
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"

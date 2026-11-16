@@ -93,3 +93,28 @@ export async function cropAndResizeCoverImageToBlob(
   const dataUrl = await cropAndResizeCoverImage(file, targetWidth, targetHeight);
   return dataUrlToBlob(dataUrl);
 }
+
+/**
+ * Compacta logos para armazenamento no PostgreSQL, preservando transparência.
+ * WebP é suportado pelo endpoint; evita uploads de vários MB e limites de payload.
+ */
+export async function compressLogoToBlob(file: File): Promise<Blob> {
+  if (!['image/jpeg','image/png','image/webp'].includes(file.type)) {
+    throw new Error('Use logo JPG, PNG ou WebP.');
+  }
+  if (file.size > 12_000_000) throw new Error('Escolha uma imagem de até 12 MB.');
+  const image = await createImageBitmap(file);
+  try {
+    const scale = Math.min(1, 700 / Math.max(image.width, image.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Não foi possível preparar a imagem.');
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const encoded = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve,'image/webp',0.83));
+    if (!encoded) throw new Error('Não foi possível comprimir a imagem.');
+    if (encoded.size > 2_000_000) throw new Error('Imagem ainda muito grande após otimização.');
+    return encoded;
+  } finally { image.close(); }
+}

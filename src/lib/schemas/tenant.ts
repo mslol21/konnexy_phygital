@@ -5,18 +5,24 @@ const webUrl = text(2048).refine(value => {
   if (!value) return true;
   try { const url = new URL(value); return url.protocol === 'https:' && !url.username && !url.password; } catch { return false; }
 }, 'Use um endereço HTTPS válido.');
-const imageUrl = text(2048).refine(value => !value || /^\/(logos|covers)\/[a-zA-Z0-9_.-]+$/.test(value) || /^https:\/\//.test(value), 'Envie a imagem pelo botão de upload.').nullable().optional();
+const imageUrl = text(2048).refine(value =>
+  !value ||
+  /^\/(logos|covers)\/[a-zA-Z0-9_.-]+$/.test(value) ||
+  /^\/api\/tenant-assets\/[0-9a-fA-F-]{36}$/.test(value) ||
+  /^https:\/\//.test(value),
+  'Imagem inválida. Envie pelo botão de upload.'
+).nullable().optional();
 export const tenantSchema = z.object({
   slug: text(80).min(2).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).refine(slug => !isDemoSlug(slug), 'Este endereço está reservado para uma demonstração.'),
   name: text(120).min(2), nicho: text(120).min(2), bio: text(1000).nullable().optional(),
   logo_url: imageUrl, cover_url: imageUrl,
   primary_color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   background_theme: z.enum(['dark','cream','sage','lavender','blush','sky']).optional(),
-  google_place_id: text(256).nullable().optional(),
+  google_place_id: text(2048).nullable().optional(),
   whatsapp_feedback: text(20).regex(/^\+?[0-9]*$/).nullable().optional(),
   status: z.enum(['active','trial','suspended','canceled']).optional(),
   plan_tier: z.enum(['starter','pro','enterprise']).optional(),
-  owner_email: z.union([z.string().email(), z.literal('')]).optional(),
+  owner_email: z.union([z.string().email(), z.literal('')]).nullable().optional(),
 });
 const moduleTypes = ['google_reviews','whatsapp_direct','pix_facil','wifi_facil','cardapio_link','catalogo_produtos','social_links','site_institucional','custom_link'] as const;
 const configSchemas = {

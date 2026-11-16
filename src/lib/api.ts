@@ -16,7 +16,15 @@ export async function readJson(req: NextRequest) {
 }
 export function apiError(error: unknown) {
   if (error instanceof AccessError) return NextResponse.json({ error: error.message }, { status: error.status });
-  if (error instanceof ZodError) return NextResponse.json({ error: 'Confira os campos informados.', details: error.flatten().fieldErrors }, { status: 400 });
+  if (error instanceof ZodError) {
+    const fields = error.issues.map(issue => ({
+      path: issue.path.join('.'), message: issue.message
+    }));
+    return NextResponse.json({
+      error: fields.length ? 'Revise: ' + fields.slice(0, 3).map(f => f.path || 'formulário').join(', ') : 'Confira os campos informados.',
+      fields
+    }, {status:400});
+  }
   console.error('Operation failed:', error instanceof Error ? error.message : 'database error');
   return NextResponse.json({ error: 'Não foi possível concluir. Tente novamente.' }, { status: 503 });
 }

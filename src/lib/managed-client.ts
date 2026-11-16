@@ -4,7 +4,10 @@ export type TenantMap = Record<string, TenantFullRecord>;
 async function request(url: string, init: RequestInit) {
   const response = await fetch(url, { ...init, credentials: 'same-origin' });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Não foi possível salvar.');
+  if (!response.ok) {
+    const details = Array.isArray(data.fields) ? data.fields.slice(0, 3).map((f: {path: string; message: string}) => f.path + ': ' + f.message).join(' | ') : '';
+    throw new Error(details || data.error || 'Não foi possível salvar.');
+  }
   return data;
 }
 export async function saveTenant(record: TenantFullRecord): Promise<TenantMap> {
