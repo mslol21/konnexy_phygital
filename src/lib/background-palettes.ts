@@ -1,13 +1,17 @@
 import type { BackgroundTheme } from '@/types/phygital';
 
-/** Valores explícitos: evita CSS injetado por usuários e preserva legibilidade. */
+/**
+ * Paletas de tons médios, levemente dessaturados: mais cor que os pastéis claros,
+ * mas sem brilho excessivo. Valores fixos impedem CSS injetado por usuários.
+ * Os cartões continuam claros para preservar legibilidade e contraste do texto.
+ */
 export const BACKGROUND_PALETTES: Record<BackgroundTheme, {
   label: string; background: string; tint: string; accent: string;
 }> = {
   dark: { label: 'Escuro', background: '#18181B', tint: '#09090B', accent: '#6366F1' },
-  cream: { label: 'Creme', background: '#FFF9ED', tint: '#F5EADC', accent: '#D2B894' },
-  sage: { label: 'Sálvia', background: '#F1F7F0', tint: '#DFEADF', accent: '#9CBDA4' },
-  lavender: { label: 'Lavanda', background: '#F7F2FC', tint: '#EAE0F5', accent: '#B6A0D4' },
-  blush: { label: 'Rosé', background: '#FFF5F5', tint: '#F6E0E6', accent: '#D9ACBB' },
-  sky: { label: 'Azul suave', background: '#F0F8FE', tint: '#DCECF8', accent: '#91BBD7' },
+  cream: { label: 'Areia quente', background: '#DEC69F', tint: '#C6A779', accent: '#A77840' },
+  sage: { label: 'Verde sálvia', background: '#AFCCB5', tint: '#87AD94', accent: '#4B8065' },
+  lavender: { label: 'Lavanda', background: '#C3B1D9', tint: '#9D87C2', accent: '#75569E' },
+  blush: { label: 'Rosé', background: '#E0B2BF', tint: '#C888A1', accent: '#A65477' },
+  sky: { label: 'Azul sereno', background: '#A9CADC', tint: '#7EAFCB', accent: '#397EA5' },
 };
