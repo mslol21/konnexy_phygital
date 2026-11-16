@@ -26,13 +26,17 @@ import type { Tenant, TenantModule, AccessSource } from '@/types/phygital';
 export function resolveGoogleReviewUrl(raw?: string | null): string | null {
   const value = (raw || '').trim();
   if (!value) return null;
-  if (/^https?:\/\//i.test(value)) {
-    return value;
+  let url: URL | null = null;
+  try { url = new URL(value.startsWith('https://') ? value : 'https://' + value); } catch { /* use Place ID below */ }
+  if (url && url.protocol === 'https:') {
+    const host = url.hostname.toLowerCase();
+    if (host === 'google.com' || host.endsWith('.google.com') ||
+        host === 'google.com.br' || host.endsWith('.google.com.br') ||
+        host === 'maps.app.goo.gl' || host === 'g.page') return url.toString();
   }
-  if (/^(maps\.app\.goo\.gl|goo\.gl\/maps|g\.page|www\.google\.com\/maps|google\.com\/maps)/i.test(value)) {
-    return `https://${value}`;
-  }
-  return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(value)}`;
+  if (/^ChI[A-Za-z0-9_-]{10,}$/.test(value))
+    return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(value)}`;
+  return null;
 }
 
 export function MicroPageClient({

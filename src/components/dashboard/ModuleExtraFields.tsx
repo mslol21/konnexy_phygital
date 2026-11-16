@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { uploadTenantImage } from '@/lib/managed-client';
 import { compressLogoToBlob } from '@/lib/images';
@@ -90,8 +90,7 @@ export function ModuleExtraFields({module,tenantId,onChange}:Props){
     case 'social_links':return <div className="grid sm:grid-cols-2 gap-3">
       <Field label="Facebook (URL HTTPS)" value={c.facebook||''} onChange={v=>set('facebook',v)}/>
       <Field label="YouTube (URL HTTPS)" value={c.youtube||''} onChange={v=>set('youtube',v)}/>
-      <Field label="URL de anúncio (opcional)" value={c.announcement_url||''} onChange={v=>set('announcement_url',v)}/>
-      <Field label="Texto do anúncio (opcional)" value={c.announcement_text||''} onChange={v=>set('announcement_text',v)}/>
+      <p className="sm:col-span-2 text-xs text-zinc-500">A micro-página exibirá somente as redes sociais que tiverem links cadastrados.</p>
     </div>;
     case 'site_institucional':
     case 'custom_link':return <div className="grid gap-3">

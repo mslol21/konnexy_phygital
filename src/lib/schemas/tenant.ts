@@ -42,7 +42,32 @@ export const moduleSchema = z.object({
   config_data: z.record(z.string(), z.unknown())
 }).transform((mod, ctx) => {
   const result = configSchemas[mod.module_type].safeParse(mod.config_data);
-  if (!result.success) { ctx.addIssue({ code: 'custom', message: `Configuração inválida: ${mod.module_type}` }); return z.NEVER; }
+  if (!result.success) {
+    ctx.addIssue({ code: 'custom', message: 'Confira os campos de ' + mod.module_type + ': ' + result.error.issues.map(i=>i.path.join('.')).join(', ') });
+    return z.NEVER;
+  }
+  if (mod.is_active) {
+    const cfg = result.data as Record<string, any>;
+    let message = '';
+    if (mod.module_type === 'whatsapp_direct' && !String(cfg.phone || '').replace(/\D/g,''))
+      message = 'Informe o WhatsApp de atendimento.';
+    if (mod.module_type === 'pix_facil' && (!String(cfg.pix_key || '').trim() || !String(cfg.beneficiary_name || '').trim()))
+      message = 'Informe a chave Pix e o nome do favorecido.';
+    if (mod.module_type === 'wifi_facil' && (!String(cfg.ssid || '').trim() || (cfg.encryption !== 'nopass' && !String(cfg.password || ''))))
+      message = 'Informe a rede de convidados e sua senha.';
+    if (mod.module_type === 'cardapio_link' && !String(cfg.url || '').trim())
+      message = 'Informe o link HTTPS do cardápio.';
+    if (mod.module_type === 'catalogo_produtos' && (!Array.isArray(cfg.items) || !cfg.items.length || cfg.items.some((item:{title:string;price:string})=>!item.title?.trim() || !item.price?.trim())))
+      message = 'Cadastre ao menos um produto com nome e preço.';
+    if (mod.module_type === 'social_links' && ![cfg.instagram,cfg.tiktok,cfg.facebook,cfg.youtube].some((url:unknown)=>typeof url==='string' && url.trim()))
+      message = 'Informe ao menos uma rede social.';
+    if ((mod.module_type === 'site_institucional' || mod.module_type === 'custom_link') && !String(cfg.url || '').trim())
+      message = 'Informe o link HTTPS de destino.';
+    if (message) {
+      ctx.addIssue({ code:'custom', message: mod.module_type + ': ' + message });
+      return z.NEVER;
+    }
+  }
   return { ...mod, config_data: result.data };
 });
 export const saveTenantSchema = z.object({
