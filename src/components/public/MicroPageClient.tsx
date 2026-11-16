@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { Sun, Moon, ExternalLink, MessageCircle, Sparkles } from 'lucide-react';
 import { NeonGradientCard } from '@/components/magicui/neon-gradient-card';
 import { GoogleGLogo, GoogleReviewBackground } from '@/components/public/GoogleReviewBrand';
+import { ReviewTextAssistant } from '@/components/public/ReviewTextAssistant';
 
 const BentoModulesGrid = dynamic(
   () => import('@/components/public/BentoModuleCards').then((mod) => mod.BentoModulesGrid),
@@ -168,6 +169,7 @@ export function MicroPageClient({
                     </p>
                   )}
 
+                  {!demo && <ReviewTextAssistant tenantId={tenant.id} accessSource={accessSource} />}
                   {waUrl && (
                     <a
                       href={waUrl}
