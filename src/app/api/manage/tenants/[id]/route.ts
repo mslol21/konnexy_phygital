@@ -15,7 +15,9 @@ export async function PUT(req:NextRequest,context:{params:Promise<{id:string}>})
     const input = saveTenantSchema.parse(await readJson(req));
     const plan = role === 'super_admin' ? input.tenant.plan_tier || current.plan_tier || 'starter' : current.plan_tier || 'starter';
     const limits = PLAN_LIMITS[plan];
-    const modules = input.modules.map(mod => ({...mod,is_active:mod.is_active && limits.allowedModules.includes(mod.module_type)}));
+    const forbidden = input.modules.find(mod => mod.is_active && !limits.allowedModules.includes(mod.module_type));
+    if (forbidden) throw new AccessError(403, 'O módulo ' + forbidden.module_type + ' não está disponível no plano contratado.');
+    const modules = input.modules;
     if (modules.filter(m=>m.is_active).length > limits.maxActiveModules)
       throw new AccessError(400,'Quantidade de módulos excede o plano.');
     const tenant = {

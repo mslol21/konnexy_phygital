@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import { BACKGROUND_PALETTES } from '@/lib/background-palettes';
 import { GoogleBusinessFinder } from '@/components/dashboard/GoogleBusinessFinder';
+import { ModuleExtraFields } from '@/components/dashboard/ModuleExtraFields';
 import type { ModuleType, Tenant, TenantModule, BackgroundTheme } from '@/types/phygital';
 
 const MODULE_META: Record<
@@ -59,7 +60,7 @@ const MODULE_META: Record<
     upsellBadge: 'Incluso'
   },
   pix_facil: {
-    label: 'Módulo Pix Fácil (copiar chave)',
+    label: 'Pix Fácil: QR estático e chave copiável',
     description: 'Exibe a chave Pix para copiar e usar no aplicativo do banco.',
     upsellBadge: '+ R$ 19,90/mês'
   },
@@ -86,7 +87,7 @@ const MODULE_META: Record<
   site_institucional: {
     label: 'Site Oficial / Link Institucional',
     description: 'Cartão de redirecionamento para o site ou sistema de agendamento externo.',
-    upsellBadge: 'Incluso'
+    upsellBadge: 'Disponível no Enterprise'
   },
   custom_link: {
     label: 'Link Personalizado Extra',
@@ -176,6 +177,11 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Não foi possível salvar.'); }
   };
   const toggleModuleActive = (type: ModuleType) => {
+    const allowed = PLAN_LIMITS[tenantProfile.plan_tier || 'starter'].allowedModules;
+    if (!allowed.includes(type)) {
+      toast.error('Este recurso não faz parte do plano contratado.');
+      return;
+    }
     setModules(prev => prev.map(m => m.module_type === type ? { ...m, is_active: !m.is_active } : m));
   };
   const moveModuleOrder = (index: number, direction: 'up' | 'down') => {
@@ -671,6 +677,7 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
                     upsellBadge: 'Add-on'
                   };
                   const isExpanded = expandedModule === mod.module_type;
+                  const isAllowed = PLAN_LIMITS[tenantProfile.plan_tier || 'starter'].allowedModules.includes(mod.module_type);
 
                   return (
                     <div
@@ -716,7 +723,7 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
                                 {mod.title || meta.label}
                               </h3>
                               <span className="rounded-full bg-zinc-200/70 dark:bg-zinc-800 px-2 py-0.5 text-[10px] font-semibold text-zinc-600 dark:text-zinc-300">
-                                {meta.upsellBadge}
+                                {isAllowed ? 'Incluído no plano' : 'Disponível em outro plano'}
                               </span>
                             </div>
                             <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1">
@@ -741,6 +748,8 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
                             role="switch"
                             aria-checked={mod.is_active}
                             onClick={() => toggleModuleActive(mod.module_type)}
+                            disabled={!isAllowed || saving}
+                            title={!isAllowed ? 'Módulo indisponível no plano atual' : 'Ativar ou desativar módulo'}
                             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
                               mod.is_active
                                 ? 'bg-emerald-500'
@@ -948,16 +957,24 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
                               </div>
                             )}
 
+                            <ModuleExtraFields
+                              module={mod}
+                              tenantId={tenantProfile.id}
+                              onChange={config => setModules(prev => prev.map(m => m.id === mod.id ? { ...m, config_data: config } : m))}
+                            />
                             <div className="flex justify-end pt-1">
                               <button
                                 type="button"
-                                onClick={() => {
-                                  persistCurrentProfile(tenantProfile, modules);
-                                  toast.success(
-                                    `Módulo atualizado para ${tenantProfile.name}!`
-                                  );
-                                  setExpandedModule(null);
+                                onClick={async () => {
+                                  try {
+                                    await persistCurrentProfile(tenantProfile, modules);
+                                    toast.success(`Módulo atualizado para ${tenantProfile.name}!`);
+                                    setExpandedModule(null);
+                                  } catch (error) {
+                                    toast.error(error instanceof Error ? error.message : 'Erro ao salvar o módulo.');
+                                  }
                                 }}
+                                disabled={saving}
                                 className="rounded-xl bg-zinc-900 dark:bg-zinc-100 px-4 py-2 text-xs font-bold text-white dark:text-zinc-900"
                               >
                                 Salvar Módulo na Micro-Página
