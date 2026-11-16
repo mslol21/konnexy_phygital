@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     let ownerId: string | null = null;
     if (tenant.owner_email) {
       const existing = await query<{id:string}>(
-        'SELECT id FROM public.profiles WHERE lower(email)=lower($1) LIMIT 1',
+        'SELECT p.id FROM public.profiles p JOIN neon_auth."user" u ON u.id = p.id::text WHERE lower(p.email)=lower($1) LIMIT 1',
         [tenant.owner_email.trim()]
       );
       ownerId = existing[0]?.id || null;
