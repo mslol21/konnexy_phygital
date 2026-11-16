@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Sun, Moon, ExternalLink, Copy, MessageCircle, Loader2, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
+import { Sun, Moon, ExternalLink, MessageCircle, Sparkles } from 'lucide-react';
 import { NeonGradientCard } from '@/components/magicui/neon-gradient-card';
 import { GoogleGLogo, GoogleReviewBackground } from '@/components/public/GoogleReviewBrand';
 
@@ -47,9 +46,6 @@ export function MicroPageClient({
   accessSource: AccessSource;
 }) {
   const [dark, setDark] = useState((tenant.background_theme || 'dark') === 'dark');
-  const [experience, setExperience] = useState('');
-  const [suggestion, setSuggestion] = useState('');
-  const [loading, setLoading] = useState(false);
   const tracked = useRef(false);
 
   useEffect(() => {
@@ -64,42 +60,9 @@ export function MicroPageClient({
   const googleUrl = resolveGoogleReviewUrl(tenant.google_place_id);
   const waUrl = whatsapp
     ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(
-        experience || `Olá! Acessei a página de ${tenant.name}.`
+        `Olá! Acessei a página de ${tenant.name}.`
       )}`
     : null;
-
-  async function improveText() {
-    setLoading(true);
-    setSuggestion('');
-    try {
-      const res = await fetch('/api/generate-reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenantId: tenant.id, experience })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Não foi possível revisar o texto.');
-      setSuggestion(data.suggestion);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Assistência indisponível. Seu texto foi mantido.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function copyText() {
-    try {
-      await navigator.clipboard.writeText(experience);
-      trackEvent(tenant.id, accessSource, 'review_copied', 'google_reviews');
-      toast.success('Texto copiado. Cole no Google e revise antes de publicar.');
-    } catch {
-      toast.error('Não foi possível copiar. Selecione o texto e copie manualmente.');
-    }
-  }
 
   const palette = BACKGROUND_PALETTES[tenant.background_theme || 'dark'];
   const lightBackground = !dark && tenant.background_theme !== 'dark';
@@ -217,75 +180,7 @@ export function MicroPageClient({
                     </a>
                   )}
 
-                  <details className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
-                    <summary className="cursor-pointer font-medium text-sm">
-                      Quer organizar seu relato antes de avaliar?
-                    </summary>
-                    <label htmlFor="experience" className="block mt-4 mb-2 text-sm">
-                      Conte sua experiência com suas palavras
-                    </label>
-                    <textarea
-                      id="experience"
-                      rows={4}
-                      maxLength={1000}
-                      value={experience}
-                      onChange={(e) => {
-                        setExperience(e.target.value);
-                        setSuggestion('');
-                      }}
-                      className="w-full rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white/80 dark:bg-zinc-950/80 p-3 text-sm"
-                      placeholder="O que aconteceu durante seu atendimento?"
-                    />
-                    <p className="mt-2 text-xs text-zinc-500">
-                      A assistência é opcional. Ao solicitar a revisão, o relato será enviado ao serviço de IA do Google. Evite dados pessoais. Nada é publicado automaticamente.
-                    </p>
-                    <div className="mt-3 flex gap-2 flex-wrap">
-                      <button
-                        disabled={loading || experience.trim().length < 10}
-                        onClick={improveText}
-                        className="rounded-lg border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-sm disabled:opacity-50"
-                      >
-                        {loading ? (
-                          <span className="flex items-center gap-2">
-                            <Loader2 size={14} className="animate-spin" />
-                            Revisando...
-                          </span>
-                        ) : (
-                          'Revisar clareza do texto'
-                        )}
-                      </button>
-                      <button
-                        onClick={copyText}
-                        disabled={!experience.trim()}
-                        className="rounded-lg border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-sm disabled:opacity-50"
-                      >
-                        <Copy size={14} className="inline mr-1" />
-                        Copiar meu texto
-                      </button>
-                    </div>
-                    {suggestion && (
-                      <div className="mt-4 rounded-xl bg-zinc-100 dark:bg-zinc-800 p-4">
-                        <p className="text-xs font-semibold mb-2">
-                          Sugestão — confira se representa sua experiência:
-                        </p>
-                        <p className="text-sm whitespace-pre-wrap">{suggestion}</p>
-                        <button
-                          className="mt-3 text-sm underline"
-                          onClick={() => {
-                            setExperience(suggestion);
-                            setSuggestion('');
-                          }}
-                        >
-                          Usar e editar sugestão
-                        </button>
-                      </div>
-                    )}
-                    {waUrl && (
-                      <p className="mt-4 text-xs text-zinc-500">
-                        Ao abrir o WhatsApp, revise a mensagem e toque em Enviar. Abrir a conversa não confirma o envio.
-                      </p>
-                    )}
-                  </details>
+
                 </div>
               </NeonGradientCard>
             )}
