@@ -60,7 +60,10 @@ export function MicroPageClient({
   }, [tenant.id, accessSource, demo]);
 
   const reviews = modules.find((m) => m.module_type === 'google_reviews');
-  const whatsapp = tenant.whatsapp_feedback?.replace(/\D/g, '');
+  const rawWhatsapp = (tenant.whatsapp_feedback || '').replace(/\D/g, '');
+  const whatsapp = rawWhatsapp.startsWith('55') && (rawWhatsapp.length === 12 || rawWhatsapp.length === 13)
+    ? rawWhatsapp
+    : (rawWhatsapp.length === 10 || rawWhatsapp.length === 11 ? '55' + rawWhatsapp : '');
   const googleUrl = resolveGoogleReviewUrl(tenant.google_place_id);
   const waUrl = whatsapp
     ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(
