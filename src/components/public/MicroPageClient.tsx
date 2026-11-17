@@ -98,16 +98,16 @@ export function MicroPageClient({
                   <img
                     src={tenant.cover_url}
                     alt=""
-                    className="absolute inset-0 h-full w-full object-cover opacity-35 dark:opacity-40"
+                    className="absolute inset-0 h-full w-full object-cover opacity-25 dark:opacity-40"
                   />
-                  <div className={lightBackground ? "pointer-events-none absolute inset-0 bg-gradient-to-b from-white/55 via-white/70 to-white/95" : "pointer-events-none absolute inset-0 bg-gradient-to-b from-black/25 via-black/45 to-zinc-950/90"} />
+                  <div className={dark ? "pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-black/65 to-zinc-950/90" : "pointer-events-none absolute inset-0 bg-gradient-to-b from-white/65 via-white/80 to-white/95"} />
                 </>
               )}
               <div className="relative z-10">
                 <button
                   aria-label="Alternar tema"
                   onClick={() => setDark(!dark)}
-                  className="absolute right-0 top-0 rounded-full p-2 bg-zinc-200/80 dark:bg-zinc-800/80 backdrop-blur-sm"
+                  className="absolute right-0 top-0 rounded-full p-2 bg-white/90 text-zinc-800 dark:bg-zinc-800/90 dark:text-white backdrop-blur-sm shadow-sm"
                 >
                   {dark ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
@@ -118,15 +118,29 @@ export function MicroPageClient({
                     className="mx-auto mb-4 h-20 w-20 rounded-2xl object-cover bg-white shadow-lg border border-white/20"
                   />
                 )}
-                <p className="text-xs uppercase tracking-widest text-zinc-500 dark:text-zinc-300 font-semibold">
-                  {tenant.nicho}
-                </p>
-                <h1 className="mt-2 text-2xl font-bold">{tenant.name}</h1>
-                {tenant.bio && (
-                  <p className="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
-                    {tenant.bio}
+                <div className={dark
+                  ? "mx-auto max-w-sm rounded-2xl border border-white/10 bg-zinc-950/80 px-4 py-4 text-white shadow-lg backdrop-blur-md"
+                  : "mx-auto max-w-sm rounded-2xl border border-white/80 bg-white/90 px-4 py-4 text-zinc-900 shadow-md backdrop-blur-md"
+                }>
+                  <p className={dark
+                    ? "text-xs uppercase tracking-widest text-zinc-200 font-semibold"
+                    : "text-xs uppercase tracking-widest text-zinc-700 font-semibold"
+                  }>
+                    {tenant.nicho}
                   </p>
-                )}
+                  <h1 className={dark
+                    ? "mt-2 text-2xl font-extrabold leading-tight tracking-tight text-white"
+                    : "mt-2 text-2xl font-extrabold leading-tight tracking-tight text-zinc-950"
+                  }>{tenant.name}</h1>
+                  {tenant.bio && (
+                    <p className={dark
+                      ? "mt-3 text-sm font-medium leading-relaxed text-zinc-100"
+                      : "mt-3 text-sm font-medium leading-relaxed text-zinc-800"
+                    }>
+                      {tenant.bio}
+                    </p>
+                  )}
+                </div>
               </div>
             </NeonGradientCard>
 
