@@ -127,7 +127,12 @@ export function BentoModulesGrid({ tenant, modules, demo = false, accessSource }
              * =============================================================== */
             case 'whatsapp_direct': {
               const cfg = (mod.config_data || {}) as WhatsAppDirectConfig;
-              const cleanPhone = (cfg.phone || '').replace(/\D/g, '');
+              // O WhatsApp principal é a fonte de verdade. O telefone do módulo
+              // é usado apenas como alternativa, para perfis antigos.
+              const rawPhone = (tenant.whatsapp_feedback || cfg.phone || '').replace(/\D/g, '');
+              const cleanPhone = rawPhone.startsWith('55') && (rawPhone.length === 12 || rawPhone.length === 13)
+                ? rawPhone
+                : (rawPhone.length === 10 || rawPhone.length === 11 ? '55' + rawPhone : '');
               if (!cleanPhone && !demo) return null;
               const msg =
                 cfg.default_message ||
