@@ -46,4 +46,39 @@
   .bento-card-hover {
     @apply transition-all duration-200 hover:border-zinc-300/80 dark:hover:border-zinc-700/80 hover:shadow-glass-md;
   }
+
+  .animate-ambient-glow {
+    animation: konnexy-ambient-glow 4.5s ease-in-out infinite;
+  }
+
+  .animate-float-subtle {
+    animation: konnexy-float-subtle 4s ease-in-out infinite;
+  }
+}
+
+@keyframes konnexy-ambient-glow {
+  0%, 100% {
+    transform: scale(1) translateZ(0);
+    opacity: 0.28;
+  }
+  50% {
+    transform: scale(1.1) translateZ(0);
+    opacity: 0.48;
+  }
+}
+
+@keyframes konnexy-float-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ambient-glow,
+  .animate-float-subtle {
+    animation: none !important;
+  }
 }

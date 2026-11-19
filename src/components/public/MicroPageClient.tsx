@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { Sun, Moon, ExternalLink, MessageCircle, Sparkles } from 'lucide-react';
 import { NeonGradientCard } from '@/components/magicui/neon-gradient-card';
 import { GoogleGLogo, GoogleReviewBackground } from '@/components/public/GoogleReviewBrand';
+import { HeroProfileCard } from '@/components/public/HeroProfileCard';
 
 const BentoModulesGrid = dynamic(
   () => import('@/components/public/BentoModuleCards').then((mod) => mod.BentoModulesGrid),
@@ -88,63 +89,12 @@ export function MicroPageClient({
           )}
 
           <div inert={demo} className="space-y-5">
-            {/* 1º QUADRO: IDENTIDADE DO COMÉRCIO + IMAGEM DE CAPA 16:9 (1200x675px) */}
-            <NeonGradientCard
-              borderRadius={24}
-              borderSize={1.5}
-              neonColors={{ firstColor: lightBackground ? palette.accent : tenant.primary_color, secondColor: lightBackground ? palette.tint : '#6366f1' }}
-              innerClassName="relative overflow-hidden p-6 text-center bg-white dark:bg-zinc-900"
-            >
-              {tenant.cover_url && (
-                <>
-                  <img
-                    src={tenant.cover_url}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover opacity-25 dark:opacity-40"
-                  />
-                  <div className={dark ? "pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-black/65 to-zinc-950/90" : "pointer-events-none absolute inset-0 bg-gradient-to-b from-white/65 via-white/80 to-white/95"} />
-                </>
-              )}
-              <div className="relative z-10">
-                <button
-                  aria-label="Alternar tema"
-                  onClick={() => setDark(!dark)}
-                  className="absolute right-0 top-0 rounded-full p-2 bg-white/90 text-zinc-800 dark:bg-zinc-800/90 dark:text-white backdrop-blur-sm shadow-sm"
-                >
-                  {dark ? <Sun size={18} /> : <Moon size={18} />}
-                </button>
-                {tenant.logo_url && (
-                  <img
-                    src={tenant.logo_url}
-                    alt={`Logo ${tenant.name}`}
-                    className="mx-auto mb-4 h-20 w-20 rounded-2xl object-cover bg-white shadow-lg border border-white/20"
-                  />
-                )}
-                <div className={dark
-                  ? "mx-auto max-w-sm rounded-2xl border border-white/10 bg-zinc-950/80 px-4 py-4 text-white shadow-lg backdrop-blur-md"
-                  : "mx-auto max-w-sm rounded-2xl border border-white/80 bg-white/90 px-4 py-4 text-zinc-900 shadow-md backdrop-blur-md"
-                }>
-                  <p className={dark
-                    ? "text-xs uppercase tracking-widest text-zinc-200 font-semibold"
-                    : "text-xs uppercase tracking-widest text-zinc-700 font-semibold"
-                  }>
-                    {tenant.nicho}
-                  </p>
-                  <h1 className={dark
-                    ? "mt-2 text-2xl font-extrabold leading-tight tracking-tight text-white"
-                    : "mt-2 text-2xl font-extrabold leading-tight tracking-tight text-zinc-950"
-                  }>{tenant.name}</h1>
-                  {tenant.bio && (
-                    <p className={dark
-                      ? "mt-3 text-sm font-medium leading-relaxed text-zinc-100"
-                      : "mt-3 text-sm font-medium leading-relaxed text-zinc-800"
-                    }>
-                      {tenant.bio}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </NeonGradientCard>
+            {/* 1º QUADRO: HERO PROFILE HEADER REDESENHADO */}
+            <HeroProfileCard
+              tenant={tenant}
+              dark={dark}
+              onToggleTheme={() => setDark(!dark)}
+            />
 
             {/* 2º QUADRO: AVALIAÇÃO DO GOOGLE COM SÍMBOLO OFICIAL "G" E CORES AO FUNDO */}
             {reviews && (
