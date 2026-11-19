@@ -459,9 +459,9 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                             }
                             className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 py-2 text-xs font-bold text-amber-400 focus:border-amber-500 focus:outline-none"
                           >
-                            <option value="starter">Starter</option>
-                            <option value="pro">Pro Phygital</option>
-                            <option value="enterprise">Enterprise</option>
+                            <option value="starter">Placa Base (Sem Mensalidade)</option>
+                            <option value="pro">Mais Funções (R$ 14,90/mês)</option>
+                            <option value="enterprise">Redes & Franquias (R$ 14,90/mês)</option>
                           </select>
                         </div>
                       </div>
@@ -600,9 +600,9 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                               }
                               className={`rounded-xl border px-3 py-1.5 text-xs font-bold focus:outline-none bg-zinc-950 ${planMeta.badgeColor}`}
                             >
-                              <option value="starter">Starter (Até 3 Módulos)</option>
-                              <option value="pro">Pro Phygital (Até 6 Módulos)</option>
-                              <option value="enterprise">Enterprise Full (Até 9 Módulos)</option>
+                              <option value="starter">Placa Base (R$ 80 único • Sem Mensalidade)</option>
+                              <option value="pro">Mais Funções (R$ 14,90/mês)</option>
+                              <option value="enterprise">Redes & Franquias (R$ 14,90/mês)</option>
                             </select>
                           </td>
 
@@ -801,9 +801,9 @@ export default function SuperAdminDashboard({ initialRecords }: { initialRecords
                       }
                       className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs font-bold text-amber-400 focus:border-amber-500 focus:outline-none"
                     >
-                      <option value="starter">Starter — R$ 67,00/mês</option>
-                      <option value="pro">Pro Phygital — R$ 127,00/mês</option>
-                      <option value="enterprise">Enterprise Full — R$ 247,00/mês</option>
+                      <option value="starter">Placa Base — R$ 80,00 único (Sem Mensalidade)</option>
+                      <option value="pro">Mais Funções — R$ 14,90/mês</option>
+                      <option value="enterprise">Redes & Franquias — R$ 14,90/mês</option>
                     </select>
                   </div>
                 </div>

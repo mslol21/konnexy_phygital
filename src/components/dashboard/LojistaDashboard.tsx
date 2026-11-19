@@ -50,24 +50,24 @@ const MODULE_META: Record<
   { label: string; description: string; upsellBadge: string }
 > = {
   google_reviews: {
-    label: 'Reputação Ativa (Avaliações no Google Gemini)',
+    label: 'Reputação Ativa (Avaliações no Google)',
     description: 'Permite avaliar no Google e conversar com a empresa sem filtro por nota.',
-    upsellBadge: 'Core Engine'
+    upsellBadge: 'Incluso na Placa (R$ 80)'
   },
   whatsapp_direct: {
     label: 'WhatsApp Direto com Mensagem Pronta',
     description: 'Botão de conversão rápida para agendamentos, pedidos e atendimento.',
-    upsellBadge: 'Incluso'
+    upsellBadge: 'Incluso na Placa (R$ 80)'
+  },
+  social_links: {
+    label: 'Hub de Redes Sociais (Instagram / TikTok)',
+    description: 'Transforma clientes presenciais do balcão em seguidores recorrentes.',
+    upsellBadge: 'Incluso na Placa (R$ 80)'
   },
   pix_facil: {
     label: 'Pix Fácil: QR estático e chave copiável',
     description: 'Exibe a chave Pix para copiar e usar no aplicativo do banco.',
-    upsellBadge: '+ R$ 19,90/mês'
-  },
-  catalogo_produtos: {
-    label: 'Vitrine & Catálogo Digital em Drawer',
-    description: 'Exibe destaques, combos e serviços em Sheet deslizante com preços.',
-    upsellBadge: '+ R$ 29,90/mês'
+    upsellBadge: '+ R$ 14,90/mês'
   },
   wifi_facil: {
     label: 'Wi-Fi Fácil com QR de Conexão Automática',
@@ -77,22 +77,22 @@ const MODULE_META: Record<
   cardapio_link: {
     label: 'Cardápio / Carta de Serviços em PDF ou Link',
     description: 'Abertura fluida em Drawer inferior ou cardápio externo.',
-    upsellBadge: '+ R$ 19,90/mês'
+    upsellBadge: '+ R$ 14,90/mês'
   },
-  social_links: {
-    label: 'Hub de Redes Sociais (Instagram / TikTok)',
-    description: 'Transforma clientes presenciais do balcão em seguidores recorrentes.',
-    upsellBadge: 'Incluso'
+  catalogo_produtos: {
+    label: 'Vitrine & Catálogo Digital em Drawer',
+    description: 'Exibe destaques, combos e serviços em Sheet deslizante com preços.',
+    upsellBadge: '+ R$ 14,90/mês'
   },
   site_institucional: {
     label: 'Site Oficial / Link Institucional',
     description: 'Cartão de redirecionamento para o site ou sistema de agendamento externo.',
-    upsellBadge: 'Disponível no Enterprise'
+    upsellBadge: '+ R$ 14,90/mês'
   },
   custom_link: {
     label: 'Link Personalizado Extra',
-    description: 'Botão customizado para campanhas, sorteios ou pesquise de satisfação.',
-    upsellBadge: 'Add-on'
+    description: 'Botão customizado para campanhas, sorteios ou pesquisa de satisfação.',
+    upsellBadge: '+ R$ 14,90/mês'
   }
 };
 
