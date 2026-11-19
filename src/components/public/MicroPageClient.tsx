@@ -54,6 +54,12 @@ export function MicroPageClient({
   const tracked = useRef(false);
 
   useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.toggle('dark', dark);
+    }
+  }, [dark]);
+
+  useEffect(() => {
     if (!demo && !tracked.current) {
       tracked.current = true;
       trackEvent(tenant.id, accessSource, 'page_view');
@@ -88,13 +94,14 @@ export function MicroPageClient({
             </aside>
           )}
 
-          <div inert={demo} className="space-y-5">
-            {/* 1º QUADRO: HERO PROFILE HEADER REDESENHADO */}
-            <HeroProfileCard
-              tenant={tenant}
-              dark={dark}
-              onToggleTheme={() => setDark(!dark)}
-            />
+          {/* 1º QUADRO: HERO PROFILE HEADER REDESENHADO */}
+          <HeroProfileCard
+            tenant={tenant}
+            dark={dark}
+            onToggleTheme={() => setDark(!dark)}
+          />
+
+          <div className="space-y-5">
 
             {/* 2º QUADRO: AVALIAÇÃO DO GOOGLE COM SÍMBOLO OFICIAL "G" E CORES AO FUNDO */}
             {reviews && (

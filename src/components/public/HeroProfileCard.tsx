@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sun, Moon, ShieldCheck, Sparkles } from 'lucide-react';
+import { Sun, Moon, ShieldCheck } from 'lucide-react';
 import type { Tenant } from '@/types/phygital';
 
 interface HeroProfileCardProps {
@@ -15,7 +15,7 @@ interface HeroProfileCardProps {
  */
 function hexToRgba(hex: string | undefined | null, alpha = 1): string {
   if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex)) {
-    return `rgba(217, 119, 6, ${alpha})`; // fallback dourado / âmbar
+    return `rgba(217, 119, 6, ${alpha})`;
   }
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -25,9 +25,15 @@ function hexToRgba(hex: string | undefined | null, alpha = 1): string {
 
 /**
  * HeroProfileCard
- * Redesenho de alta fidelidade e sofisticação do primeiro card da micro-página phygital.
- * Elimina o aspecto de "card branco sobre fundo desbotado", unificando identidade visual,
- * iluminação ambiente suave, tipografia de impacto e micro-interações fluidas.
+ * Redesenho premium do Hero/Profile Header com máxima valorização da imagem de fundo (BG)
+ * sem comprometer a legibilidade e contraste da descrição e dos textos.
+ *
+ * Utiliza arquitetura visual em camadas:
+ * - Camada 1: Imagem de capa vibrante e visível com nitidez (85-95% de opacidade)
+ * - Camada 2: Glow atmosférico suave da marca
+ * - Camada 3: Logo de alta definição com moldura e sombra profunda
+ * - Camada 4: Cápsula de vidro jateado (frosted glass shield) com backdrop-blur-xl,
+ *   garantindo contraste WCAG AAA e zero ruído visual sob os caracteres.
  */
 export function HeroProfileCard({
   tenant,
@@ -35,8 +41,7 @@ export function HeroProfileCard({
   onToggleTheme
 }: HeroProfileCardProps) {
   const brandColor = tenant.primary_color || '#d97706';
-  const glowLight = hexToRgba(brandColor, dark ? 0.38 : 0.22);
-  const glowSubtle = hexToRgba(brandColor, dark ? 0.14 : 0.08);
+  const hasCover = Boolean(tenant.cover_url);
 
   const initials = (tenant.name || 'KT')
     .split(' ')
@@ -47,102 +52,113 @@ export function HeroProfileCard({
 
   return (
     <header
-      className={`relative overflow-hidden rounded-[24px] border p-5 sm:p-7 text-center transition-all duration-300 ${
+      className={`relative overflow-hidden rounded-[24px] border transition-all duration-300 ${
         dark
-          ? 'border-white/10 bg-zinc-950/90 text-white shadow-[0_24px_50px_-15px_rgba(0,0,0,0.7)]'
-          : 'border-black/5 bg-white/95 text-zinc-900 shadow-[0_20px_45px_-12px_rgba(0,0,0,0.12)]'
+          ? 'border-white/15 bg-zinc-950 text-white shadow-[0_24px_50px_-15px_rgba(0,0,0,0.75)]'
+          : 'border-zinc-200/80 bg-zinc-100 text-zinc-900 shadow-[0_20px_45px_-12px_rgba(0,0,0,0.15)]'
       }`}
-      style={{
-        backgroundImage: dark
-          ? `radial-gradient(ellipse 90% 65% at 50% 0%, ${glowLight} 0%, ${glowSubtle} 50%, rgba(9,9,11,0.95) 100%)`
-          : `radial-gradient(ellipse 90% 65% at 50% 0%, ${glowLight} 0%, ${glowSubtle} 45%, rgba(255,255,255,0.98) 100%)`
-      }}
     >
-      {/* 1. IMAGEM DE CAPA COM MESCLAGEM CINEMATOGRÁFICA (SE CADASTRADA) */}
-      {tenant.cover_url && (
-        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+      {/* =====================================================================
+       * 1. IMAGEM DE FUNDO (BG) VIBRANTE E REALMENTE VISÍVEL
+       * ===================================================================== */}
+      {hasCover ? (
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          {/* Imagem de capa com alta nitidez, presença e proporção ideal */}
           <img
-            src={tenant.cover_url}
-            alt=""
-            aria-hidden="true"
-            className={`h-full w-full object-cover transition-transform duration-700 hover:scale-105 ${
-              dark ? 'opacity-30 mix-blend-luminosity' : 'opacity-20'
-            }`}
+            src={tenant.cover_url!}
+            alt={`Capa ${tenant.name}`}
+            className="h-full w-full object-cover object-center transform transition-transform duration-700 hover:scale-105"
           />
-          {/* Gradiente de fade para assegurar 100% de contraste com os textos */}
+
+          {/* Gradiente sutil superior (vinheta para legibilidade dos botões do topo) */}
           <div
-            className={`absolute inset-0 ${
+            className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/55 via-black/20 to-transparent pointer-events-none"
+          />
+
+          {/* Sombra suave de profundidade na base para ancoragem visual elegante */}
+          <div
+            className={`absolute inset-x-0 bottom-0 h-28 pointer-events-none ${
               dark
-                ? 'bg-gradient-to-b from-black/40 via-zinc-950/80 to-zinc-950'
-                : 'bg-gradient-to-b from-white/30 via-white/80 to-white'
+                ? 'bg-gradient-to-t from-black/70 via-black/20 to-transparent'
+                : 'bg-gradient-to-t from-black/30 via-black/10 to-transparent'
             }`}
           />
         </div>
+      ) : (
+        /* Fallback sem capa: degradê procedural sofisticado com a cor primária */
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: dark
+              ? `radial-gradient(circle at 50% 0%, ${hexToRgba(brandColor, 0.45)} 0%, rgba(24,24,27,0.95) 60%, rgba(9,9,11,1) 100%)`
+              : `radial-gradient(circle at 50% 0%, ${hexToRgba(brandColor, 0.28)} 0%, rgba(250,250,250,0.95) 65%, rgba(244,244,245,1) 100%)`
+          }}
+        />
       )}
 
-      {/* 2. LUZ AMBIENTE / GLOW PULSANTE ATRÁS DA LOGO */}
+      {/* =====================================================================
+       * 2. LUZ AMBIENTE / GLOW PULSANTE DA MARCA ATRÁS DA LOGO
+       * ===================================================================== */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-14 -translate-x-1/2 h-36 w-36 sm:h-44 sm:w-44 rounded-full blur-3xl animate-ambient-glow"
+        className="pointer-events-none absolute left-1/2 top-20 -translate-x-1/2 h-36 w-36 sm:h-44 sm:w-44 rounded-full blur-3xl animate-ambient-glow"
         style={{
           backgroundColor: brandColor,
-          opacity: dark ? 0.35 : 0.22
+          opacity: dark ? 0.4 : 0.28
         }}
       />
 
-      {/* 3. BARRA SUPERIOR: SELO DE VERIFICAÇÃO & ALTERNADOR DE TEMA */}
-      <div className="relative z-10 mb-4 flex items-center justify-between">
-        {/* Emblema Oficial / Selo de Autenticidade Konnexy */}
-        <div
-          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase backdrop-blur-md border shadow-sm ${
-            dark
-              ? 'border-white/10 bg-white/10 text-zinc-200'
-              : 'border-zinc-200/80 bg-white/80 text-zinc-700'
-          }`}
-        >
-          <ShieldCheck className="h-3 w-3 text-emerald-500" />
-          <span>Perfil Oficial</span>
-          <span className="hidden xs:inline text-zinc-400">• Konnexy</span>
+      {/* =====================================================================
+       * 3. CONTEÚDO PRINCIPAL (RELATIVO Z-10)
+       * ===================================================================== */}
+      <div className="relative z-10 p-4 sm:p-6 flex flex-col items-center">
+        {/* BARRA SUPERIOR: SELO OFICIAL & ALTERNADOR DE TEMA */}
+        <div className="w-full mb-3 flex items-center justify-between">
+          {/* Selo Oficial com Vidro Furtivo */}
+          <div
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase backdrop-blur-md shadow-md border ${
+              hasCover || dark
+                ? 'border-white/20 bg-black/45 text-white'
+                : 'border-zinc-200 bg-white/90 text-zinc-800'
+            }`}
+          >
+            <ShieldCheck className="h-3 w-3 text-emerald-400" />
+            <span>Perfil Oficial</span>
+            <span className="hidden xs:inline opacity-70">• Konnexy</span>
+          </div>
+
+          {/* Botão de Alternância de Tema com Glassmorfismo e Alto Contraste */}
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            aria-label={dark ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+            className={`inline-flex items-center justify-center rounded-full p-2 backdrop-blur-md border transition-all duration-200 shadow-md hover:scale-105 active:scale-95 ${
+              hasCover || dark
+                ? 'border-white/20 bg-black/45 text-amber-300 hover:bg-black/60'
+                : 'border-zinc-200 bg-white/90 text-zinc-800 hover:bg-white'
+            }`}
+          >
+            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
         </div>
 
-        {/* Botão de Alternância de Tema Reposicionado (Discreto e Harmonioso) */}
-        <button
-          type="button"
-          onClick={onToggleTheme}
-          aria-label={dark ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
-          className={`inline-flex items-center justify-center rounded-full p-2 backdrop-blur-md border transition-all duration-200 shadow-sm hover:scale-105 active:scale-95 ${
-            dark
-              ? 'border-white/15 bg-zinc-900/80 text-amber-300 hover:bg-zinc-800'
-              : 'border-zinc-200/90 bg-white/90 text-zinc-700 hover:bg-zinc-100'
-          }`}
-        >
-          {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </button>
-      </div>
-
-      {/* 4. BLOCO CENTRAL: LOGO COM AURA E MOLDURA CHANFRADA */}
-      <div className="relative z-10 flex flex-col items-center">
-        <div className="relative group">
-          {/* Anel Externo Translúcido */}
+        {/* LOGO DA EMPRESA COM MOLDURA TRANSLÚCIDA E SHADOW DE PROFUNDIDADE */}
+        <div className="relative group my-1">
           <div
-            className={`relative flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-[24px] p-1.5 backdrop-blur-xl border shadow-xl transition-transform duration-300 group-hover:scale-102 ${
-              dark
-                ? 'border-white/20 bg-gradient-to-b from-white/15 to-white/5'
-                : 'border-black/5 bg-gradient-to-b from-white/90 to-white/60'
-            }`}
+            className="relative flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-[22px] p-1.5 backdrop-blur-xl border shadow-2xl transition-transform duration-300 group-hover:scale-102 bg-white/95 border-white/80 dark:border-white/25"
             style={{
-              boxShadow: `0 12px 30px -8px ${hexToRgba(brandColor, dark ? 0.45 : 0.25)}`
+              boxShadow: `0 14px 34px -8px ${hexToRgba(brandColor, 0.45)}`
             }}
           >
             {tenant.logo_url ? (
               <img
                 src={tenant.logo_url}
                 alt={`Logo ${tenant.name}`}
-                className="h-full w-full rounded-[18px] object-contain bg-white p-1.5 shadow-inner"
+                className="h-full w-full rounded-[16px] object-contain p-1"
               />
             ) : (
               <div
-                className="flex h-full w-full items-center justify-center rounded-[18px] font-black text-xl sm:text-2xl text-white shadow-inner"
+                className="flex h-full w-full items-center justify-center rounded-[16px] font-black text-xl sm:text-2xl text-white shadow-inner"
                 style={{ backgroundColor: brandColor }}
               >
                 {initials}
@@ -151,41 +167,54 @@ export function HeroProfileCard({
           </div>
         </div>
 
-        {/* 5. NICHO / SEGMENTO */}
-        {tenant.nicho && (
-          <span
-            className="mt-3.5 inline-block text-[11px] font-extrabold uppercase tracking-widest"
-            style={{ color: brandColor }}
-          >
-            {tenant.nicho}
-          </span>
-        )}
-
-        {/* 6. NOME DA EMPRESA (TÍTULO DE DESTAQUE) */}
-        <h1
-          className={`mt-1 text-2xl sm:text-3xl font-black tracking-tight leading-tight ${
-            dark ? 'text-white' : 'text-zinc-950'
+        {/* ===================================================================
+         * 4. ESCUDO DE LEITURA (FROSTED GLASS TEXT SHIELD)
+         * Isola o texto sobre o fundo fotográfico, garantindo 100% de nitidez,
+         * sem que objetos ou cores da foto de fundo atrapalhem a leitura!
+         * =================================================================== */}
+        <div
+          className={`w-full mt-3 sm:mt-4 rounded-2xl p-4 sm:p-5 text-center backdrop-blur-2xl backdrop-saturate-150 border transition-all duration-300 ${
+            dark
+              ? 'bg-zinc-950/80 border-white/15 shadow-[0_12px_36px_-10px_rgba(0,0,0,0.7)] text-white'
+              : 'bg-white/85 border-white/90 shadow-[0_12px_36px_-10px_rgba(0,0,0,0.12)] text-zinc-950'
           }`}
         >
-          {tenant.name}
-        </h1>
+          {/* Nicho / Segmento */}
+          {tenant.nicho && (
+            <span
+              className="inline-block text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest"
+              style={{ color: brandColor }}
+            >
+              {tenant.nicho}
+            </span>
+          )}
 
-        {/* 7. DESCRIÇÃO / BIO (ATÉ 3 LINHAS, SEM TRUNCAMENTO INDEVIDO) */}
-        {tenant.bio && (
-          <p
-            className={`mt-2 max-w-sm text-xs sm:text-sm font-medium leading-relaxed line-clamp-3 ${
-              dark ? 'text-zinc-300' : 'text-zinc-600'
+          {/* Nome da Empresa */}
+          <h1
+            className={`mt-1 text-2xl sm:text-3xl font-black tracking-tight leading-tight ${
+              dark ? 'text-white' : 'text-zinc-950'
             }`}
           >
-            {tenant.bio}
-          </p>
-        )}
+            {tenant.name}
+          </h1>
+
+          {/* Descrição / Bio (legível, até 3 linhas) */}
+          {tenant.bio && (
+            <p
+              className={`mt-2 text-xs sm:text-sm font-medium leading-relaxed max-w-sm mx-auto line-clamp-3 ${
+                dark ? 'text-zinc-200' : 'text-zinc-700'
+              }`}
+            >
+              {tenant.bio}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* 8. DETALHE SUTIL DE BASE COM A COR DA MARCA */}
+      {/* DETALHE SUTIL DE BASE COM A COR DA MARCA */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-24 rounded-full opacity-60"
+        className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 h-[2.5px] w-28 rounded-full opacity-75"
         style={{
           background: `linear-gradient(90deg, transparent, ${brandColor}, transparent)`
         }}
