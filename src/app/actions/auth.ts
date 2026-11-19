@@ -14,9 +14,11 @@ export interface AuthActionResult {
   redirectTo?:string;
 }
 export async function login(formData:FormData):Promise<AuthActionResult> {
-  const h=await headers();
-  const rate=await checkRateLimit(h.get('x-real-ip')||'unknown',AUTH_LOGIN_RATE_LIMIT);
-  if(!rate.allowed)return {success:false,message:AUTH_LOGIN_RATE_LIMIT.errorMessage};
+  const h = await headers();
+  const rawIp = h.get('cf-connecting-ip') || h.get('x-vercel-forwarded-for') || h.get('x-real-ip') || h.get('x-forwarded-for') || '127.0.0.1';
+  const ip = rawIp.split(',')[0]?.trim().replace(/[^0-9a-fA-F.:]/g, '').slice(0, 45) || '127.0.0.1';
+  const rate = await checkRateLimit(ip, AUTH_LOGIN_RATE_LIMIT);
+  if (!rate.allowed) return { success: false, message: AUTH_LOGIN_RATE_LIMIT.errorMessage };
   let destination:string;
   try {
     const result=await signIn({email:formData.get('email'),password:formData.get('password')});

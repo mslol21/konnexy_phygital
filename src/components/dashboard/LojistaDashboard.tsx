@@ -177,12 +177,27 @@ function DashboardContent({ initialRecords }: { initialRecords: TenantMap }) {
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Não foi possível salvar.'); }
   };
   const toggleModuleActive = (type: ModuleType) => {
-    const allowed = PLAN_LIMITS[tenantProfile.plan_tier || 'starter'].allowedModules;
+    const limits = PLAN_LIMITS[tenantProfile.plan_tier || 'starter'];
+    const allowed = limits.allowedModules;
     if (!allowed.includes(type)) {
-      toast.error('Este recurso não faz parte do plano contratado.');
+      toast.error(`O módulo não faz parte do plano ${limits.name}. Faça upgrade para habilitar.`);
       return;
     }
-    setModules(prev => prev.map(m => m.module_type === type ? { ...m, is_active: !m.is_active } : m));
+    const target = modules.find((m) => m.module_type === type);
+    if (!target) return;
+    const willBeActive = !target.is_active;
+    if (willBeActive) {
+      const activeCount = modules.filter((m) => m.is_active && m.module_type !== type).length;
+      if (activeCount >= limits.maxActiveModules) {
+        toast.error(
+          `Limite de ${limits.maxActiveModules} módulos ativos atingido para o plano ${limits.name}. Desative outro módulo ou faça upgrade.`
+        );
+        return;
+      }
+    }
+    setModules((prev) =>
+      prev.map((m) => (m.module_type === type ? { ...m, is_active: willBeActive } : m))
+    );
   };
   const moveModuleOrder = (index: number, direction: 'up' | 'down') => {
     const targetIndex = direction === 'up' ? index-1 : index+1;

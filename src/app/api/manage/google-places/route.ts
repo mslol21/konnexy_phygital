@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSession, AccessError } from '@/lib/auth/session';
 import { apiError } from '@/lib/api';
-import { checkRateLimit, extractClientIp } from '@/lib/security/rate-limiter';
+import { checkRateLimit, extractClientIp, PLACES_LOOKUP_RATE_LIMIT, buildRateLimitExceededResponse } from '@/lib/security/rate-limiter';
 
 type GoogleTextSearchPlace = {
   id?: string;
@@ -15,11 +15,8 @@ export async function GET(req: NextRequest) {
     const { user } = await requireSession();
     const q = (req.nextUrl.searchParams.get('q') || '').trim();
     if (q.length < 3 || q.length > 120) throw new AccessError(400, 'Pesquise com 3 a 120 caracteres.');
-    const rate = await checkRateLimit(user.id + ':' + extractClientIp(req), {
-      namespace: 'google-place-search', maxRequests: 20, windowMs: 60000,
-      errorMessage: 'Muitas buscas. Tente novamente em um minuto.'
-    });
-    if (!rate.allowed) throw new AccessError(429, 'Muitas buscas. Tente novamente em um minuto.');
+    const rate = await checkRateLimit(user.id + ':' + extractClientIp(req), PLACES_LOOKUP_RATE_LIMIT);
+    if (!rate.allowed) return buildRateLimitExceededResponse(rate, PLACES_LOOKUP_RATE_LIMIT);
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
     if (!apiKey) throw new AccessError(503, 'Busca ainda não configurada: adicione GOOGLE_MAPS_API_KEY na Vercel para ativar a pesquisa automática.');
     const signal = AbortSignal.timeout(8000);

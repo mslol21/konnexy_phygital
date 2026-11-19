@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
 import { staticPixPayload } from '@/lib/pix';
+import { buildWifiPayload } from '@/lib/wifi';
 import { trackEvent } from '@/lib/telemetry';
 import {
   QrCode,
@@ -77,9 +78,7 @@ export function BentoModulesGrid({ tenant, modules, demo = false, accessSource }
     setQrError(null);
     try {
       if (activeDrawer.type === 'wifi') {
-        const { ssid, password, encryption = 'WPA' } = activeDrawer.cfg;
-        const escapeWifi = (v:string) => v.replace(/([\\;,:"])/g,'\\$1');
-        payload = `WIFI:T:${encryption};S:${escapeWifi(ssid)};P:${escapeWifi(encryption==='nopass'?'':password||'')};;`;
+        payload = buildWifiPayload(activeDrawer.cfg);
       } else if (activeDrawer.type === 'pix') {
         payload = staticPixPayload(activeDrawer.cfg);
       }
